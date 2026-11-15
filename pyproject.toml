@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=77"]  # PEP 639: SPDX license expression, license-files
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "remblais"
+dynamic = ["version"]  # remblais.__version__
+description = "Sinkhorn divergences, kernel MMD and optimal transport on GPUs: a drop-in GeomLoss replacement built on kernox"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+license-files = ["LICENSE-MIT", "LICENSE-APACHE", "THIRD_PARTY.md"]
+requires-python = ">=3.10"
+authors = [{ name = "Jean-Baptiste Keck" }]
+classifiers = ["Programming Language :: Python :: 3"]
+# kernox (and symox, which kernox is built on) are not on PyPI: install symox,
+# then kernox, from GitHub before remblais (see "Installation" in the README and
+# the kernox documentation, https://keckj.github.io/kernox/getting-started/):
+#
+#   kernox @ git+https://github.com/keckj/kernox
+#
+# This direct reference (PEP 508) is not declared in `dependencies`: PyPI rejects
+# packages whose dependencies point to a URL.
+# torch: installed from the platform-specific index (CUDA, ROCm, XPU), as for kernox.
+dependencies = ["numpy", "scipy", "torch"]
+
+[project.optional-dependencies]
+# geomloss 0.3.1 is the reference implementation the tests compare against.
+test = ["pytest", "pytest-check", "hypothesis", "geomloss==0.3.1"]
+
+[project.urls]
+Source = "https://github.com/keckj/remblais"
+Documentation = "https://keckj.github.io/remblais/"
+kernox = "https://github.com/keckj/kernox"
+
+[tool.setuptools.dynamic]
+version = { attr = "remblais.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["remblais*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
