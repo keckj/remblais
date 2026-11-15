@@ -35,13 +35,13 @@ built on [kernox](https://github.com/keckj/kernox) instead of PyKeOps: write
 ## Installation
 
 remblais needs Python 3.10 or later, PyTorch and kernox. Install PyTorch for
-your platform, kernox from PyPI with the extra that matches your GPU, then
-remblais from GitHub. For an NVIDIA GPU:
+your platform, then kernox with the extra that matches your GPU, then remblais,
+both from PyPI. For an NVIDIA GPU:
 
 ```sh
 pip install torch --index-url https://download.pytorch.org/whl/cu126
 pip install "kernox[cuda]"
-pip install "remblais @ git+https://github.com/keckj/remblais"
+pip install remblais
 ```
 
 For AMD and Intel GPUs, install PyTorch from the `rocm` or `xpu` index and

@@ -5,7 +5,7 @@ remblais is a drop-in replacement for GeomLoss 0.3.1: replace
 or ``import remblais as geomloss``.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 GEOMLOSS_VERSION = "0.3.1"  # reference version for parity
 
 from .costs import Cost, keops_string_cost  # noqa: E402

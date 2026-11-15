@@ -34,7 +34,7 @@ and the PyTorch index given in the kernox guide.
 ## Install remblais
 
 ```sh
-pip install "remblais @ git+https://github.com/keckj/remblais"
+pip install remblais
 ```
 
 From a source checkout, use an editable install with the test extra, which
