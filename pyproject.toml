@@ -12,16 +12,10 @@ license-files = ["LICENSE-MIT", "LICENSE-APACHE", "THIRD_PARTY.md"]
 requires-python = ">=3.10"
 authors = [{ name = "Jean-Baptiste Keck" }]
 classifiers = ["Programming Language :: Python :: 3"]
-# kernox is not on PyPI yet: install it from GitHub before remblais (see
-# "Installation" in the README and the kernox documentation,
-# https://keckj.github.io/kernox/getting-started/); it pulls symox from PyPI:
-#
-#   kernox @ git+https://github.com/keckj/kernox
-#
-# This direct reference (PEP 508) is not declared in `dependencies`: PyPI rejects
-# packages whose dependencies point to a URL.
+# kernox: the plain package is enough for the CPU reference path; install it
+# with the extra of your GPU (kernox[cuda], kernox[rocm], kernox[xpu]) for speed.
 # torch: installed from the platform-specific index (CUDA, ROCm, XPU), as for kernox.
-dependencies = ["numpy", "scipy", "torch"]
+dependencies = ["numpy", "scipy", "torch", "kernox>=1.0.1"]
 
 [project.optional-dependencies]
 # geomloss 0.3.1 is the reference implementation the tests compare against.
