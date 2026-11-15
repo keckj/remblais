@@ -34,18 +34,17 @@ built on [kernox](https://github.com/keckj/kernox) instead of PyKeOps: write
 
 ## Installation
 
-remblais needs Python 3.10 or later, PyTorch and kernox. kernox and symox, its
-symbolic engine, are not on PyPI: install symox, then kernox, then remblais,
-all from GitHub. For an NVIDIA GPU:
+remblais needs Python 3.10 or later, PyTorch and kernox. kernox is not on PyPI
+yet: install it, then remblais, from GitHub (symox, the symbolic engine of
+kernox, comes from PyPI automatically). For an NVIDIA GPU:
 
 ```sh
-pip install "symox @ git+https://github.com/keckj/symox@53d9576e9f39db16e9ca8b3483d754385ebaf986"
 pip install torch --index-url https://download.pytorch.org/whl/cu126
 pip install "kernox[cuda] @ git+https://github.com/keckj/kernox"
 pip install "remblais @ git+https://github.com/keckj/remblais"
 ```
 
-Building symox needs a Rust toolchain. For AMD and Intel GPUs, install
+For AMD and Intel GPUs, install
 PyTorch from the `rocm` or `xpu` index and kernox with the `rocm` or `xpu`
 extra; the details are in the
 [kernox installation guide](https://keckj.github.io/kernox/getting-started/)

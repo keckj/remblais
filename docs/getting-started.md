@@ -8,21 +8,21 @@ two point clouds, then its gradient.
 - Python 3.10 or later, PyTorch, NumPy and SciPy.
 - [kernox](https://github.com/keckj/kernox), the library of fused GPU
   reductions remblais is built on, and [symox](https://github.com/keckj/symox),
-  the symbolic engine of kernox. Neither is on PyPI.
+  the symbolic engine of kernox. symox is on PyPI; kernox is installed from
+  GitHub for now.
 - A GPU supported by kernox for speed: NVIDIA (CUDA), AMD (ROCm) or Intel
   (XPU). Without one, remblais still runs on the CPU, slowly (see
   [Running without a GPU](#running-without-a-gpu)).
 
-## Install symox and kernox
+## Install kernox
 
 Follow the
 [kernox installation guide](https://keckj.github.io/kernox/getting-started/):
-it installs symox at the commit kernox is pinned on (this needs a Rust
-toolchain), PyTorch from the index that matches your GPU, then kernox with the
-matching extra. For an NVIDIA GPU, this comes down to:
+it installs PyTorch from the index that matches your GPU, then kernox with the
+matching extra (symox, the symbolic engine of kernox, comes from PyPI with
+it). For an NVIDIA GPU, this comes down to:
 
 ```sh
-pip install "symox @ git+https://github.com/keckj/symox@53d9576e9f39db16e9ca8b3483d754385ebaf986"
 pip install torch --index-url https://download.pytorch.org/whl/cu126
 pip install "kernox[cuda] @ git+https://github.com/keckj/kernox"
 python -m kernox.diagnostics --check

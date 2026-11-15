@@ -12,9 +12,9 @@ license-files = ["LICENSE-MIT", "LICENSE-APACHE", "THIRD_PARTY.md"]
 requires-python = ">=3.10"
 authors = [{ name = "Jean-Baptiste Keck" }]
 classifiers = ["Programming Language :: Python :: 3"]
-# kernox (and symox, which kernox is built on) are not on PyPI: install symox,
-# then kernox, from GitHub before remblais (see "Installation" in the README and
-# the kernox documentation, https://keckj.github.io/kernox/getting-started/):
+# kernox is not on PyPI yet: install it from GitHub before remblais (see
+# "Installation" in the README and the kernox documentation,
+# https://keckj.github.io/kernox/getting-started/); it pulls symox from PyPI:
 #
 #   kernox @ git+https://github.com/keckj/kernox
 #
