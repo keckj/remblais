@@ -45,7 +45,10 @@ pip install remblais
 ```
 
 For AMD and Intel GPUs, install PyTorch from the `rocm` or `xpu` index and
-kernox with the `rocm` or `xpu` extra; the details are in the
+kernox with the `rocm` or `xpu` extra. Intel GPUs also need a SYCL runtime
+matching the host `icpx` compiler, see
+[Intel GPUs](https://keckj.github.io/kernox/getting-started/#intel-gpus). The
+details are in the
 [kernox installation guide](https://keckj.github.io/kernox/getting-started/)
 and in [Getting started](docs/getting-started.md).
 

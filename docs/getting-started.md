@@ -29,7 +29,10 @@ python -m kernox.diagnostics --check
 
 The last command checks that kernox sees your GPU and can compile and run a
 few reductions on it. For AMD and Intel GPUs, use the `rocm` or `xpu` extra
-and the PyTorch index given in the kernox guide.
+and the PyTorch index given in the kernox guide. Intel GPUs need one more step,
+a SYCL runtime matching the host `icpx` compiler: see
+[Intel GPUs](https://keckj.github.io/kernox/getting-started/#intel-gpus) in the
+kernox guide.
 
 ## Install remblais
 
