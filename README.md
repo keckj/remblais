@@ -4,9 +4,10 @@
   <img src="docs/images/remblais-banner.png" alt="remblais logo" width="560">
 </p>
 
-remblais computes geometric losses between measures on GPUs: Sinkhorn
-divergences (entropic optimal transport), kernel norms (MMD) and Hausdorff
-divergences between point clouds, images and volumes. It is a drop-in
+remblais computes geometric losses between measures on NVIDIA (CUDA), AMD
+(ROCm/HIP) and Intel (SYCL) GPUs: Sinkhorn divergences (entropic optimal
+transport), kernel norms (MMD) and Hausdorff divergences between point clouds,
+images and volumes. It is a drop-in
 replacement for [GeomLoss](https://www.kernel-operations.io/geomloss/) 0.3.1,
 built on [kernox](https://github.com/keckj/kernox) instead of PyKeOps: write
 `import remblais as geomloss` and your code runs unchanged.
@@ -23,8 +24,10 @@ built on [kernox](https://github.com/keckj/kernox) instead of PyKeOps: write
 - **Faster.** Every softmin is one fused kernox reduction, compiled once and
   reused for all values of ε; the debiased Sinkhorn loop fuses its four
   softmins into two reductions per iteration.
-- **Three GPU vendors.** kernox runs on NVIDIA, AMD and Intel GPUs, so
-  remblais does too.
+- **NVIDIA, AMD and Intel GPUs.** The `online` and `multiscale` backends,
+  which GeomLoss runs through PyKeOps on NVIDIA GPUs only, run here on CUDA,
+  ROCm/HIP and SYCL through kernox. remblais's own test suite runs on NVIDIA
+  and Intel GPUs; on AMD GPUs it relies on kernox's tested HIP backend.
 - **Fixes, not surprises.** A few GeomLoss bugs are fixed (the gradient of
   unbalanced transport, `"hausdorff"` without a kernel, ...). Every
   difference is listed in [Coming from GeomLoss](docs/geomloss.md).
@@ -42,8 +45,9 @@ pip install "kernox[cuda] @ git+https://github.com/keckj/kernox"
 pip install "remblais @ git+https://github.com/keckj/remblais"
 ```
 
-Building symox needs a Rust toolchain. AMD and Intel GPUs, and the details,
-are covered in the
+Building symox needs a Rust toolchain. For AMD and Intel GPUs, install
+PyTorch from the `rocm` or `xpu` index and kernox with the `rocm` or `xpu`
+extra; the details are in the
 [kernox installation guide](https://keckj.github.io/kernox/getting-started/)
 and in [Getting started](docs/getting-started.md).
 

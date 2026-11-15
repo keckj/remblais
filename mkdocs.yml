@@ -1,5 +1,5 @@
 site_name: remblais
-site_description: Sinkhorn divergences, kernel MMD and optimal transport on GPUs, a drop-in GeomLoss replacement built on kernox
+site_description: Sinkhorn divergences, kernel MMD and optimal transport on NVIDIA, AMD and Intel GPUs (CUDA, HIP, SYCL), a drop-in GeomLoss replacement built on kernox
 site_url: https://keckj.github.io/remblais/
 repo_url: https://github.com/keckj/remblais
 repo_name: keckj/remblais
