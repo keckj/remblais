@@ -25,7 +25,7 @@ def dtype_name(t):
     try:
         return _DTYPES[t.dtype]
     except KeyError:
-        raise TypeError(f"remblais : dtype {t.dtype} non pris en charge (float16/32/64)") from None
+        raise TypeError(f"remblais: unsupported dtype {t.dtype} (float16/32/64)") from None
 
 
 def backend_for(device):
@@ -34,7 +34,7 @@ def backend_for(device):
 
 
 # ---------------------------------------------------------------------------------
-# Coûts symboliques
+# Symbolic costs
 # ---------------------------------------------------------------------------------
 def _norm(d):
     """‖d‖ with a zero gradient at d = 0 (like KeOps ``Norm2``, where Rsqrt(0) = 0)."""
@@ -79,15 +79,15 @@ class Cost:
 
 
 # ---------------------------------------------------------------------------------
-# Cache de plans
+# Plan cache
 # ---------------------------------------------------------------------------------
 _PLANS = {}
 _LOCK = threading.Lock()
 
 
-# exp/log approchés (option fast_math de kernox, CUDA FP32) pour les plans compilés
-# dans ce contexte ; fixé par SamplesLoss autour de chaque appel. Les plans de
-# gradient en héritent (kernox), même hors du contexte.
+# Approximate exp/log (kernox fast_math option, CUDA FP32) for the plans compiled
+# in this context; set by SamplesLoss around each call. Gradient plans inherit
+# it (kernox), even outside the context.
 _FAST_MATH = contextvars.ContextVar("remblais_fast_math", default=False)
 
 
@@ -206,8 +206,8 @@ def _contig(t):
     return t.contiguous()
 
 
-# Vérification des ranges (bornes, recouvrements ; une synchronisation hôte par
-# appel) : REMBLAIS_VALIDATE_RANGES=1, activée par les tests.
+# Range validation (bounds, overlaps; one host synchronization per call):
+# REMBLAIS_VALIDATE_RANGES=1, enabled by the tests.
 VALIDATE_RANGES = os.environ.get("REMBLAIS_VALIDATE_RANGES", "0") == "1"
 
 

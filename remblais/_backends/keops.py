@@ -5,7 +5,7 @@
 from ..lazy import LazyTensor as torch_LazyTensor
 
 keops_available = True
-numpy_LazyTensor = torch_LazyTensor  # entrées NumPy : calcul Torch CPU, sortie NumPy
+numpy_LazyTensor = torch_LazyTensor  # NumPy inputs: Torch computation on the CPU, NumPy output
 
 
 def sum(K_ij, axis=None, keepdims=False):

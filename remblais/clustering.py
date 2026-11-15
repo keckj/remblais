@@ -37,12 +37,12 @@ def grid_cluster(x, size):
         cells = torch.floor(x / size).to(torch.int64)
         cells = cells - cells.min(dim=0).values
         ext = (cells.max(dim=0).values + 1).tolist()
-        if math.prod(ext) < 2**62:  # code entier lexicographique exact : unique 1D (tous devices)
+        if math.prod(ext) < 2**62:  # exact lexicographic integer code: 1D unique (all devices)
             key = torch.zeros(len(cells), dtype=torch.int64, device=x.device)
             for d in range(cells.shape[1]):
                 key = key * ext[d] + cells[:, d]
             lab = _dense_rank(key)
-        else:  # très grand nombre de cellules : unique lexicographique sur CPU
+        else:  # very large number of cells: lexicographic unique on the CPU
             _, lab = torch.unique(cells.cpu(), dim=0, sorted=True, return_inverse=True)
             lab = lab.to(x.device)
     return lab.view(-1)
@@ -59,7 +59,7 @@ def cluster_ranges_centroids(x, lab, weights=None, nlab=None):
     with torch.no_grad():
         lab = lab.view(-1)
         C = int(lab.max().item()) + 1 if nlab is None else nlab
-        # pas de bincount : faux sur XPU (Torch 2.15), d'où des ranges hors bornes
+        # no bincount: wrong on XPU (Torch 2.15), giving out-of-bounds ranges
         counts = torch.zeros(C, dtype=torch.int64, device=lab.device).index_add_(0, lab, torch.ones_like(lab))
         ends = torch.cumsum(counts, 0)
         ranges = torch.stack((ends - counts, ends), dim=1)
@@ -72,8 +72,8 @@ def cluster_ranges_centroids(x, lab, weights=None, nlab=None):
         cnt = counts.to(x.dtype).clamp_min(1).view(-1, 1)
         wc = w_c.view(-1, 1)
         x_c = torch.where(wc > 0, sw / torch.where(wc > 0, wc, torch.ones_like(wc)), su / cnt)
-        # singleton : le point lui-même, par indexation (exact sur tout device ;
-        # une somme atomique index_add n'est pas garantie exacte partout)
+        # singleton: the point itself, by indexing (exact on every device;
+        # an atomic index_add sum is not guaranteed to be exact everywhere)
         first = x[ranges[:, 0].clamp(max=len(x) - 1)]
         x_c = torch.where(counts.view(-1, 1) == 1, first, x_c)
     return ranges, x_c, w_c
@@ -109,14 +109,14 @@ def from_matrix(clusters_i, clusters_j, keep):
     return kp.ranges_from_labels(clusters_i.labels, clusters_j.labels, keep)
 
 
-# Repli dense des niveaux fins multiscale : si le coût estimé des blocs gardés
-# dépasse cette fraction de N·M, on lance la réduction sans ranges (toutes les
-# paires, résultat plus exact que la troncature). REMBLAIS_DENSE_RATIO=inf garde
-# toujours les ranges (comportement de GeomLoss).
-# Seuil calibré sur RTX 2080 Ti (D = 3, blur = 0,05, 10⁴ à 3·10⁵ points) : coût réel
-# des ranges ≈ 1,3 à 1,7 × l'estimation ; équilibre vers 0,75.
+# Dense fallback for the fine multiscale levels: if the estimated cost of the kept
+# blocks exceeds this fraction of N·M, the reduction runs without ranges (all
+# pairs, a more exact result than the truncation). REMBLAIS_DENSE_RATIO=inf always
+# keeps the ranges (GeomLoss behavior).
+# Threshold calibrated on an RTX 2080 Ti (D = 3, blur = 0.05, 10⁴ to 3·10⁵ points):
+# actual cost of the ranges ≈ 1.3 to 1.7 × the estimate; break-even around 0.75.
 DENSE_RATIO = float(os.environ.get("REMBLAIS_DENSE_RATIO", "0.75"))
-_TILE_M = 128  # hauteur de tuile de lignes des noyaux ranges (modèle de coût)
+_TILE_M = 128  # row tile height of the ranged kernels (cost model)
 
 
 def ranged_cost_ratio(clusters_i, clusters_j, keep):

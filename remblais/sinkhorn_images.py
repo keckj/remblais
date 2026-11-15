@@ -50,7 +50,7 @@ def log_dens(α):
 
 
 # ---------------------------------------------------------------------------------
-# Réductions 1D batchées
+# Batched 1D reductions
 # ---------------------------------------------------------------------------------
 def _line_plan(kind, p, dtype, backend):
     """1D LSE (soft) or MAX (hard): (h_j − s·|x_i − x_j|^p), s a parameter."""
@@ -112,9 +112,9 @@ def C_transform(G, tau=1, p=2):
     N = G.shape[1]
     if p not in (1, 2):
         raise NotImplementedError()
-    # x = arange(N) sans division par N : on reporte le facteur N^p dans s.
+    # x = arange(N) without division by N: the factor N^p goes into s.
     s = (N if p == 1 else N * N) / (tau if p == 1 else 2 * tau)
-    G = G.unsqueeze(1)  # (B, 1, …) : même découpage en lignes que les images
+    G = G.unsqueeze(1)  # (B, 1, …): same split into lines as the images
     out = _lines("max", G, p, s)
     if D >= 2:
         out = _lines("max", out.transpose(-1, -2), p, s).transpose(-1, -2)
@@ -124,7 +124,7 @@ def C_transform(G, tau=1, p=2):
 
 
 # ---------------------------------------------------------------------------------
-# Divergence de Sinkhorn entre images
+# Sinkhorn divergence between images
 # ---------------------------------------------------------------------------------
 def extrapolate(f_ba, g_ab, eps, damping, C_xy, b_log, C_xy_fine):
     return upsample(f_ba)

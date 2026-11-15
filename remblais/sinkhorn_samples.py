@@ -51,13 +51,13 @@ def sinkhorn_tensorized(a, x, b, y, p=2, blur=0.05, reach=None, diameter=None, s
 def softmin_online(eps, C_xy, h_y, cost=None):
     """Softmin as a kernox LOGSUMEXP reduction; C_xy = (x, y), (B, N, D) / (B, M, D)."""
     x, y = C_xy
-    if x.dim() == 3 and x.shape[0] == 1:  # B = 1 : appel sans dimension de batch
+    if x.dim() == 3 and x.shape[0] == 1:  # B = 1: call without a batch dimension
         return -eps * _kp.lse(cost, x[0], y[0], h_y.reshape(-1), 1.0 / eps).unsqueeze(0)
     return -eps * _kp.lse(cost, x, y, h_y, 1.0 / eps)
 
 
-# Forme produit scalaire : désactivée par défaut tant que les bancs ne l'ont pas
-# tranchée ; REMBLAIS_DOT_MIN_DIM=16 l'active pour D ≥ 16 (expérience).
+# Dot-product form: disabled by default until benchmarks settle the question;
+# REMBLAIS_DOT_MIN_DIM=16 enables it for D ≥ 16 (experimental).
 DOT_MIN_DIM = int(os.environ.get("REMBLAIS_DOT_MIN_DIM", 10**9))
 
 
@@ -90,12 +90,12 @@ def sinkhorn_loop_paired(cost, a_log, b_log, x, y, eps_list, rho, dot=False, deb
     batch = x.shape[:-2]
     dt, dev = x.dtype, x.device
 
-    def sel(n1, n2):  # q = 1 sur les n1 premières lignes, r = 1 sur les n2 suivantes
+    def sel(n1, n2):  # q = 1 on the first n1 rows, r = 1 on the next n2
         q = torch.cat((torch.ones(n1, dtype=dt, device=dev), torch.zeros(n2, dtype=dt, device=dev)))
         return q.expand(*batch, n1 + n2).contiguous(), (1 - q).expand(*batch, n1 + n2).contiguous()
 
     if debias:
-        rows_A = torch.cat((x, y), dim=-2)  # gradients vers x et y par torch.cat
+        rows_A = torch.cat((x, y), dim=-2)  # gradients flow to x and y through torch.cat
         rows_B = torch.cat((y, x), dim=-2)
     else:
         rows_A, rows_B = x, y
@@ -125,7 +125,7 @@ def sinkhorn_loop_paired(cost, a_log, b_log, x, y, eps_list, rho, dot=False, deb
     finally:
         torch.set_grad_enabled(grad_state)
 
-    # Extrapolation finale différentiable (théorème de l'enveloppe) :
+    # Differentiable final extrapolation (envelope theorem):
     eps = eps_list[-1]
     damping = dampening(eps, rho)
     k = len(eps_list) - 1
@@ -135,9 +135,9 @@ def sinkhorn_loop_paired(cost, a_log, b_log, x, y, eps_list, rho, dot=False, deb
     if dot:
         wsg["n_rows_A"], wsg["n_rows_B"] = 0.5 * (rows_A * rows_A).sum(-1), 0.5 * (rows_B * rows_B).sum(-1)
     if debias and not dot and torch.is_grad_enabled() and x.requires_grad != y.requires_grad:
-        # Un seul nuage différentiable (cas courant : y cible fixe) : quatre LSE
-        # séparées, pour que le gradient (une passe N·M par LSE différentiable)
-        # ne parcoure pas les lignes du nuage fixe (2 passes au lieu de 4).
+        # A single differentiable cloud (common case: fixed target y): four
+        # separate LSEs, so that the gradient (one N·M pass per differentiable
+        # LSE) does not go over the rows of the fixed cloud (2 passes instead of 4).
         s_k = ws["s"][k:k + 1]
         P_A = (-damping * eps) * torch.cat((_kp.lse_full(cost, x, ws["cols_A"], hA[0], s_k),
                                             _kp.lse_full(cost, y, ws["cols_A"], hA[1], s_k)), dim=-1)
@@ -180,9 +180,9 @@ def _lse_side(cost, ws, side, k, ha, hb, dot):
     s = ws["s"][k:k + 1]
     if not dot:
         n, m = rows.shape[-2], cols.shape[-2]
-        if ha is hb:  # sans débiaisage : une seule softmin
+        if ha is hb:  # without debiasing: a single softmin
             return _kp.lse_full(cost, rows, cols, ha, s)
-        if STACKED and n == 2 * m:  # N = M : lignes [x ; y] vues (…, 2, N, D), colonnes diffusées (pas 0)
+        if STACKED and n == 2 * m:  # N = M: rows [x ; y] viewed as (…, 2, N, D), broadcast columns (stride 0)
             batch = rows.shape[:-2]
             out = _kp.lse_full(cost, rows.view(*batch, 2, m, rows.shape[-1]),
                                cols.unsqueeze(-3).expand(*batch, 2, m, cols.shape[-1]),
@@ -199,11 +199,11 @@ def _lse_side(cost, ws, side, k, ha, hb, dot):
 
 
 USE_CUDA_GRAPHS = os.environ.get("REMBLAIS_CUDA_GRAPHS", "0") == "1"
-# N = M : softmins couplées en une LSE à dimension de batch 2 (sans les sélecteurs
-# q, r de lse2, ~8 % de calcul par paire en moins) ; REMBLAIS_STACKED=0 la désactive.
+# N = M: paired softmins in one LSE with a batch dimension of 2 (without the q, r
+# selectors of lse2, ~8% less work per pair); REMBLAIS_STACKED=0 disables it.
 STACKED = os.environ.get("REMBLAIS_STACKED", "1") != "0"
-_GRAPHS = {}           # clé (coût, formes, dtype, device, constantes) -> (graphe, entrées, sorties)
-_GRAPH_FAILED = set()  # clés dont la capture a échoué : exécution directe
+_GRAPHS = {}           # key (cost, shapes, dtype, device, constants) -> (graph, inputs, outputs)
+_GRAPH_FAILED = set()  # keys whose capture failed: eager execution
 
 
 def _graph_iterations(cost, ws, consts):
@@ -224,13 +224,13 @@ def _graph_iterations(cost, ws, consts):
             side = torch.cuda.Stream()
             side.wait_stream(torch.cuda.current_stream())
             with torch.cuda.stream(side):
-                for _ in range(2):  # compilation, décisions et caches hors capture
+                for _ in range(2):  # compilation, decisions and caches outside the capture
                     _run_iterations(cost, static, consts)
             torch.cuda.current_stream().wait_stream(side)
             graph = torch.cuda.CUDAGraph()
             with torch.cuda.graph(graph):
                 outs = _run_iterations(cost, static, consts)
-        except Exception:  # noqa: BLE001  capture impossible : exécution directe, mémorisée
+        except Exception:  # noqa: BLE001  capture failed: eager execution, remembered
             _GRAPH_FAILED.add(key)
             return _run_iterations(cost, ws, consts)
         if len(_GRAPHS) >= 16:
@@ -258,7 +258,7 @@ def _run_iterations(cost, ws, consts):
         hA, hB = _scores(a_log, b_log, P_A, P_B, eps, N, M, debias)
         L_A = _lse_side(cost, ws, "A", k, *hA, dot)
         L_B = _lse_side(cost, ws, "B", k, *hB, dot)
-        # P ← ½ (P + damping · (−ε L)), en place sur la sortie fraîche L
+        # P ← ½ (P + damping · (−ε L)), in place on the fresh output L
         P_A = L_A.mul_(-0.5 * damping * eps).add_(P_A, alpha=0.5)
         P_B = L_B.mul_(-0.5 * damping * eps).add_(P_B, alpha=0.5)
     return P_A, P_B
@@ -271,7 +271,7 @@ def sinkhorn_online(a, x, b, y, p=2, blur=0.05, reach=None, diameter=None, scali
         diameter, eps, eps_list, rho = scaling_parameters(x, y, p, blur, reach, diameter, scaling)
         xs, ys, la, lb = x, y, log_weights(a), log_weights(b)
         squeeze = x.shape[0] == 1
-        if squeeze:  # B = 1 : appels sans dimension de batch
+        if squeeze:  # B = 1: calls without a batch dimension
             xs, ys, la, lb = x[0], y[0], la[0], lb[0]
         if dot is None:
             dot = cost.key == ("p", 2) and x.shape[-1] >= DOT_MIN_DIM
@@ -295,9 +295,9 @@ def sinkhorn_online(a, x, b, y, p=2, blur=0.05, reach=None, diameter=None, scali
 # ---------------------------------------------------------------------------------
 # Multiscale (kernox + ranges block-sparse)
 # ---------------------------------------------------------------------------------
-# Un « C » multiscale est un quintuplet (x, y, clusters_x, clusters_y, ranges_xy) :
-# niveau grossier (centroïdes, Clusters, Clusters, None) ou fin (points triés,
-# None, None, ranges ou None = toutes les paires).
+# A multiscale "C" is a 5-tuple (x, y, clusters_x, clusters_y, ranges_xy):
+# coarse level (centroids, Clusters, Clusters, None) or fine level (sorted points,
+# None, None, ranges or None = all pairs).
 def softmin_multiscale(eps, C_xy, f_y, cost=None):
     x, y, _, _, ranges_xy = C_xy
     return -eps * _kp.lse(cost, x, y, f_y.reshape(-1), 1.0 / eps, ranges=ranges_xy)
@@ -376,7 +376,7 @@ def sinkhorn_multiscale(a, x, b, y, p=2, blur=0.05, reach=None, diameter=None, s
         extrapolate=extrapolate, debias=debias)
 
     out = sinkhorn_cost(eps, rho, a, b, f_aa, g_bb, g_ab, f_ba, debias=debias, potentials=potentials)
-    if potentials:  # retour à l'ordre initial des points
+    if potentials:  # back to the input order of the points
         F_x, G_y = out
         f_x, g_y = F_x.clone(), G_y.clone()
         f_x[cx.perm], g_y[cy.perm] = F_x, G_y

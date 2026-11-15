@@ -9,17 +9,17 @@ from .sinkhorn_images import softmin_grid as softmin
 
 
 def barycenter_iteration(f_k, g_k, d_log, eps, p, ak_log, w_k):
-    # Mise à jour du barycentre (moyenne géométrique)
+    # Barycenter update (geometric mean)
     ft_k = softmin(eps, p, ak_log + g_k / eps) / eps
     bar_log = d_log - (ft_k * w_k[:, :, None, None]).sum(1, keepdim=True)
 
-    # Mises à jour symétriques des potentiels
+    # Symmetric updates of the potentials
     ft_k = softmin(eps, p, ak_log + g_k / eps)
     gt_k = softmin(eps, p, bar_log + f_k / eps)
     f_k = (f_k + ft_k) / 2
     g_k = (g_k + gt_k) / 2
 
-    # Barycentre et terme de débiaisage
+    # Barycenter and debiasing term
     ft_k = softmin(eps, p, ak_log + g_k / eps) / eps
     bar_log = d_log - (ft_k * w_k[:, :, None, None]).sum(1, keepdim=True)
     d_log = 0.5 * (d_log + bar_log + softmin(eps, p, d_log) / eps)

@@ -1,4 +1,4 @@
-"""LazyTensor kernox : sémantique KeOps (formes, réductions, transposition, NumPy, gradients)."""
+"""kernox LazyTensor: KeOps semantics (shapes, reductions, transposition, NumPy, gradients)."""
 
 import numpy as np
 import pytest

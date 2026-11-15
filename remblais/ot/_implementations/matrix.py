@@ -711,5 +711,5 @@ def solve_batch(
 # - M is the number of samples "for the barycenter"
 def barycenter(*args, **kwargs):
     """Skeleton in GeomLoss 0.3.1 (its body refers to undefined names): raises ``NotImplementedError``."""
-    raise NotImplementedError("ot.barycenter : simple squelette dans GeomLoss 0.3.1 ; non fourni par remblais.")
+    raise NotImplementedError("ot.barycenter: only a skeleton in GeomLoss 0.3.1; not provided by remblais.")
 

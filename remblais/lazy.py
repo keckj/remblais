@@ -46,16 +46,16 @@ class LazyTensor:
         self._numpy = isinstance(x, np.ndarray)
         t = torch.from_numpy(x) if self._numpy else x
         if not torch.is_tensor(t) or t.dim() < 3:
-            raise ValueError("LazyTensor attend un tenseur (…, N, 1, D), (…, 1, M, D) ou (…, 1, 1, D)")
+            raise ValueError("LazyTensor expects a (…, N, 1, D), (…, 1, M, D) or (…, 1, 1, D) tensor")
         ni, nj, d = t.shape[-3:]
         if ni != 1 and nj != 1:
-            raise ValueError(f"LazyTensor : forme {tuple(t.shape)} ni de type i (N, 1, D) ni j (1, M, D)")
+            raise ValueError(f"LazyTensor: shape {tuple(t.shape)} is neither of type i (N, 1, D) nor j (1, M, D)")
         kind = "i" if ni != 1 else ("j" if nj != 1 else "p")
         self._leaves = [(kind, t)]
         self._node = ("leaf", 0, kind, d)
         self._shape = (tuple(t.shape[:-3]), ni, nj, d)
 
-    # ------------------------------------------------------------------ formes
+    # ------------------------------------------------------------------ shapes
     @property
     def shape(self):
         b, n, m, d = self._shape
@@ -93,7 +93,7 @@ class LazyTensor:
         (ba, na, ma, da), (bb, nb, mb, db) = a._shape, b._shape
         d = max(da, db) if op != "dot" else 1
         if op != "dot" and da != db and 1 not in (da, db):
-            raise ValueError(f"LazyTensor : dimensions incompatibles {da} et {db}")
+            raise ValueError(f"LazyTensor: incompatible dimensions {da} and {db}")
         shape = (tuple(torch.broadcast_shapes(ba, bb)), max(na, nb), max(ma, mb), d)
         return LazyTensor(_node=node, _leaves=a._leaves + b._leaves, _shape=shape, _numpy=a._numpy or b._numpy)
 
@@ -126,7 +126,7 @@ class LazyTensor:
             for _ in range(k - 1):
                 out = out * self
             return out
-        raise NotImplementedError(f"LazyTensor ** {k!r} : seuls 2, 0.5, −0.5 et les entiers positifs")
+        raise NotImplementedError(f"LazyTensor ** {k!r}: only 2, 0.5, −0.5 and positive integers are supported")
 
     def exp(self):
         return self._unary("exp")
@@ -168,7 +168,7 @@ class LazyTensor:
     def sqdist(self, other):
         return (self - other).sqnorm2()
 
-    def __or__(self, other):  # produit scalaire KeOps (x | y)
+    def __or__(self, other):  # KeOps dot product (x | y)
         return self._combine("dot", other)
 
     @property
@@ -181,11 +181,11 @@ class LazyTensor:
     def t(self):
         return self.T
 
-    # ---------------------------------------------------------------- réductions
+    # ---------------------------------------------------------------- reductions
     def _axis(self, dim):
         nb = len(self._shape[0])
         if dim is None:
-            raise ValueError("LazyTensor : réduction sans 'dim'")
+            raise ValueError("LazyTensor: reduction without 'dim'")
         if dim < 0:
             dim += nb + 2 + (1 if self._shape[3] > 1 else 0)
         if dim == nb:
@@ -194,7 +194,7 @@ class LazyTensor:
             return "j"
         if dim == nb + 2 and self._shape[3] > 1:
             return "c"
-        raise ValueError(f"LazyTensor : axe de réduction {dim} invalide pour la forme {self.shape}")
+        raise ValueError(f"LazyTensor: invalid reduction axis {dim} for shape {self.shape}")
 
     def sum(self, dim=None, axis=None, **kw):
         ax = self._axis(axis if dim is None else dim)
@@ -234,7 +234,7 @@ class LazyTensor:
     def _reduce(self, kind, axis, weight=None):
         src = self if axis == "j" else self.T
         if weight is not None:
-            raise NotImplementedError("LazyTensor.logsumexp(weight=) n'est pas pris en charge")
+            raise NotImplementedError("LazyTensor.logsumexp(weight=) is not supported")
         out = _run(src, kind)
         if self._numpy:
             return out.detach().numpy()
@@ -279,7 +279,7 @@ def _run(lt, kind):
     dtype = ref.dtype
     for t in tensors:
         if t.dtype != dtype:
-            raise ValueError("LazyTensor : dtypes différents entre les opérandes")
+            raise ValueError("LazyTensor: the operands have different dtypes")
     dims = [(k, (t.shape[-1] if k != "s" else 1)) for k, t in leaves]
     key = ("lazy", kind, lt._node, tuple(dims))
     nbatch = len(lt._shape[0])
@@ -303,15 +303,16 @@ def _run(lt, kind):
     try:
         run = _kp._plan(key, build, _kp.dtype_name(ref), _kp.backend_for(ref.device))
     except kp.UnsupportedError as e:
-        if "variable i et une variable j" not in str(e):
+        msg = str(e)  # kernox: the formula needs at least one i variable and one j variable
+        if "variable j" not in msg and "j variable" not in msg:
             raise
-        return _run_dense(lt, kind)  # variable i ou j éliminée par simplification symbolique
+        return _run_dense(lt, kind)  # i or j variable removed by symbolic simplification
     kwargs = {}
     names = set(run.input_names)
     for idx, (k, t) in enumerate(leaves):
         name = f"v{idx}"
         if name not in names:
-            continue  # variable simplifiée par symox (ex. multipliée par 0)
+            continue  # variable simplified away by symox (e.g. multiplied by 0)
         if k == "s":
             kwargs[name] = t
         elif k == "p":
@@ -338,11 +339,11 @@ def _inner_contiguous(u):
 def _check_batch_ranks(kwargs, nbatch):
     for name, u in kwargs.items():
         if torch.is_tensor(u) and u.dim() not in (1, nbatch + 2):
-            raise ValueError(f"LazyTensor : rang de batch incohérent pour {name}")
+            raise ValueError(f"LazyTensor: inconsistent batch rank for {name}")
 
 
 # ---------------------------------------------------------------------------------
-# Repli dense : formules sans variable i ou j (N = 1, M = 1, ou simplification)
+# Dense fallback: formulas without an i or j variable (N = 1, M = 1, or simplification)
 # ---------------------------------------------------------------------------------
 _DENSE_UNARY = {
     "neg": lambda t: -t, "exp": torch.exp, "log": torch.log, "sqrt": torch.sqrt, "abs": torch.abs,

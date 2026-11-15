@@ -19,8 +19,8 @@ routines = {
         "online": sinkhorn_online,
         "multiscale": sinkhorn_multiscale,
     },
-    # "hausdorff" avec ``kernel`` : norme à noyau (routage de GeomLoss) ; sans
-    # ``kernel`` : divergence de Hausdorff pondérée (voir remblais.hausdorff).
+    # "hausdorff" with ``kernel``: kernel norm (GeomLoss routing); without
+    # ``kernel``: weighted Hausdorff divergence (see remblais.hausdorff).
     "hausdorff": {
         "tensorized": hausdorff_tensorized,
         "online": hausdorff_online,
@@ -93,9 +93,9 @@ class SamplesLoss(Module):
                  backend="auto", fast_math=None):
         super().__init__()
         if loss not in routines or loss == "hausdorff_kernel":
-            raise ValueError(f"loss {loss!r} inconnue : sinkhorn, hausdorff, energy, gaussian, laplacian")
+            raise ValueError(f"unknown loss {loss!r}: expected sinkhorn, hausdorff, energy, gaussian or laplacian")
         if backend not in BACKENDS:
-            raise ValueError(f"backend {backend!r} inconnu : {', '.join(BACKENDS)}")
+            raise ValueError(f"unknown backend {backend!r}: expected one of {', '.join(BACKENDS)}")
         self.loss = loss
         self.backend = backend
         self.p = p
@@ -111,7 +111,7 @@ class SamplesLoss(Module):
         self.potentials = potentials
         self.verbose = verbose
         if fast_math not in (None, True, False):
-            raise ValueError(f"fast_math : None, True ou False attendu, reçu {fast_math!r}")
+            raise ValueError(f"fast_math: expected None, True or False, got {fast_math!r}")
         self.fast_math = fast_math
 
     def select_backend(self, B, N, M, D, labelled):
@@ -135,7 +135,7 @@ class SamplesLoss(Module):
 
         backend = self.select_backend(B, N, M, D, l_x is not None or l_y is not None)
 
-        if backend == "multiscale":  # le multiscale traite des mesures isolées
+        if backend == "multiscale":  # the multiscale backend handles unbatched measures
             if B == 1:
                 α, x, β, y = α.squeeze(0), x.squeeze(0), β.squeeze(0), y.squeeze(0)
             elif B > 1:

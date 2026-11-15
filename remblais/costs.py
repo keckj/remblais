@@ -28,7 +28,7 @@ _DENSE_DEFAULTS = {1: lambda x, y: distances(x, y), 2: lambda x, y: squared_dist
 
 
 # ---------------------------------------------------------------------------------
-# Formules KeOps en chaîne
+# KeOps formula strings
 # ---------------------------------------------------------------------------------
 _TOKEN = re.compile(r"\s*(?:(\d+\.\d*(?:[eE][-+]?\d+)?|\d*\.\d+(?:[eE][-+]?\d+)?|\d+(?:[eE][-+]?\d+)?)"
                     r"|([A-Za-z_][A-Za-z_0-9]*)|(\S))")
@@ -54,7 +54,7 @@ class _Parser:
         self.src = s
 
     def error(self, msg):
-        return ValueError(f"formule KeOps {self.src!r} : {msg}")
+        return ValueError(f"KeOps formula {self.src!r}: {msg}")
 
     def peek(self):
         return self.toks[self.i] if self.i < len(self.toks) else (None, None)
@@ -62,14 +62,14 @@ class _Parser:
     def take(self, kind=None, val=None):
         tok = self.peek()
         if (kind and tok[0] != kind) or (val is not None and tok[1] != val):
-            raise self.error(f"attendu {val or kind}, trouvé {tok[1]!r}")
+            raise self.error(f"expected {val or kind}, found {tok[1]!r}")
         self.i += 1
         return tok
 
     def parse(self):
         node = self.expr()
         if self.i != len(self.toks):
-            raise self.error(f"jeton inattendu {self.peek()[1]!r}")
+            raise self.error(f"unexpected token {self.peek()[1]!r}")
         return node
 
     def expr(self):
@@ -100,7 +100,7 @@ class _Parser:
         if kind == "op" and val == "(":
             self.take()
             node = self.expr()
-            if self.peek() == ("op", "|"):  # produit scalaire KeOps (a|b)
+            if self.peek() == ("op", "|"):  # KeOps dot product (a|b)
                 self.take()
                 node = ("Scalprod", node, self.expr())
             self.take("op", ")")
@@ -115,14 +115,14 @@ class _Parser:
                     args.append(self.expr())
                 self.take("op", ")")
                 if val not in FUNCTIONS:
-                    raise self.error(f"fonction {val!r} non prise en charge ({', '.join(sorted(FUNCTIONS))})")
+                    raise self.error(f"unsupported function {val!r} (supported: {', '.join(sorted(FUNCTIONS))})")
                 if val == "IntCst":
                     return ("const", args[0][1])
                 return (val, *args)
             if val in ("X", "Y"):
                 return ("var", val)
-            raise self.error(f"variable {val!r} inconnue (seules X et Y sont permises)")
-        raise self.error(f"jeton inattendu {val!r}")
+            raise self.error(f"unknown variable {val!r} (only X and Y are allowed)")
+        raise self.error(f"unexpected token {val!r}")
 
 
 FUNCTIONS = {
@@ -196,7 +196,7 @@ def _eval(node, X, Y, ops):
     if tag == "Pow":
         n = node[2]
         if n[0] != "const" or n[1] != int(n[1]):
-            raise ValueError("Pow(a, n) : n doit être un entier constant")
+            raise ValueError("Pow(a, n): n must be a constant integer")
         return a ** int(n[1])
     if tag == "Powf":
         return a ** ev(node[2])
@@ -217,9 +217,9 @@ def keops_string_cost(s):
     def formula(x, y):
         out = _eval(tree, x, y, _FormulaOps)
         if not isinstance(out, kp.Formula):
-            raise ValueError(f"formule KeOps {s!r} : le coût ne dépend ni de X ni de Y")
+            raise ValueError(f"KeOps formula {s!r}: the cost depends on neither X nor Y")
         if out.dim != 1:
-            raise ValueError(f"formule KeOps {s!r} : coût scalaire attendu (dimension {out.dim})")
+            raise ValueError(f"KeOps formula {s!r}: expected a scalar cost (dimension {out.dim})")
         return out
 
     def dense(x, y):
@@ -227,7 +227,7 @@ def keops_string_cost(s):
             return dense(x[None], y[None])[0]
         out = _eval(tree, x[:, :, None, :], y[:, None, :, :], _DenseOps)
         if out.shape[-1] != 1:
-            raise ValueError(f"formule KeOps {s!r} : coût scalaire attendu")
+            raise ValueError(f"KeOps formula {s!r}: expected a scalar cost")
         return out.squeeze(-1)
 
     return Cost(("keops", s), formula, dense)
@@ -235,8 +235,8 @@ def keops_string_cost(s):
 
 def _formula_only(fn):
     def dense(x, y):
-        raise ValueError("ce coût est une formule kernox : utilisez backend='online' ou 'multiscale', "
-                         "ou donnez une routine dense (couple (formule, routine))")
+        raise ValueError("this cost is a kernox formula: use backend='online' or 'multiscale', "
+                         "or provide a dense routine as a (formula, routine) pair")
     return Cost(("callable", fn), fn, dense)
 
 
@@ -246,8 +246,8 @@ def resolve_cost(cost, p, backend):
         return cost
     if cost is None:
         if p not in DEFAULT_COSTS:
-            raise ValueError(f"p = {p} non pris en charge sans coût personnalisé (p = 1 ou 2)")
-        if p == 2:  # ½‖x − y‖² : le ½ passe dans le paramètre s = 1/(2ε)
+            raise ValueError(f"p = {p} is not supported without a custom cost (p = 1 or 2)")
+        if p == 2:  # ½‖x − y‖²: the ½ goes into the parameter s = 1/(2ε)
             return Cost(("p", p), DEFAULT_COSTS[p], _DENSE_DEFAULTS[p], kernel_formula=sqdist, factor=0.5)
         return Cost(("p", p), DEFAULT_COSTS[p], _DENSE_DEFAULTS[p])
     if isinstance(cost, str):
@@ -260,7 +260,7 @@ def resolve_cost(cost, p, backend):
         if backend == "tensorized":
             return Cost(("dense", cost), None, cost)
         return _formula_only(cost)
-    raise TypeError(f"cost : chaîne KeOps, fonction, couple (formule, routine) ou remblais.Cost attendu, reçu {cost!r}")
+    raise TypeError(f"cost: expected a KeOps string, a function, a (formula, routine) pair or a remblais.Cost, got {cost!r}")
 
 
 __all__ = ["Cost", "keops_string_cost", "resolve_cost", "FUNCTIONS"]

@@ -24,7 +24,7 @@ def squared_distances(x, y):
         D_xy = torch.matmul(x, y.permute(0, 2, 1))
         D_yy = (y * y).sum(-1).unsqueeze(1)
     else:
-        raise ValueError(f"Nombre de dimensions incorrect : x.shape = {tuple(x.shape)}")
+        raise ValueError(f"Wrong number of dimensions: x.shape = {tuple(x.shape)}")
     return D_xx - 2 * D_xy + D_yy
 
 

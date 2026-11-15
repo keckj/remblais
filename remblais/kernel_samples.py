@@ -38,7 +38,7 @@ def double_grad(x):
 
 
 # ---------------------------------------------------------------------------------
-# Noyaux : formule kernox (s = 1/blur) et version dense (GeomLoss)
+# Kernels: kernox formula (s = 1/blur) and dense version (GeomLoss)
 # ---------------------------------------------------------------------------------
 def _norm(d):
     d2 = d.sqnorm2()
@@ -60,7 +60,7 @@ def energy_kernel(x, y, blur=None, use_keops=False, ranges=None):
 
 kernel_routines = {"gaussian": gaussian_kernel, "laplacian": laplacian_kernel, "energy": energy_kernel}
 
-# Le paramètre s porte toute l'échelle (une multiplication par paire, pas par coordonnée).
+# The parameter s carries the whole scale (one multiplication per pair, not per coordinate).
 kernel_formulas = {
     "gaussian": lambda x, y, s: kp.exp(-s * (x - y).sqnorm2()),  # s = 1/(2 blur²)
     "laplacian": lambda x, y, s: kp.exp(-s * _norm(x - y)),      # s = 1/blur
@@ -86,12 +86,12 @@ def resolve_kernel(kernel, name, blur, online):
         return kernel
     if kernel is None:
         if name is None:
-            raise ValueError("loss='hausdorff' avec un noyau : argument 'kernel' requis")
+            raise ValueError("loss='hausdorff' with a kernel: the 'kernel' argument is required")
         if name not in kernel_routines:
-            raise ValueError(f"noyau {name!r} inconnu (gaussian, laplacian, energy)")
+            raise ValueError(f"unknown kernel {name!r} (gaussian, laplacian, energy)")
         return Kernel(("named", name), kernel_formulas[name], kernel_routines[name], kernel_params[name])
-    # Noyau personnalisé : sur tenseurs (tensorized, signature GeomLoss) ou sur
-    # formules kernox (online/multiscale), blur figé dans la formule.
+    # Custom kernel: on tensors (tensorized, GeomLoss signature) or on kernox
+    # formulas (online/multiscale), with blur fixed in the formula.
     if online:
         return Kernel(("custom", kernel, float(blur)), lambda x, y, s: kernel(x, y, blur=blur), None)
     return Kernel(("custom", kernel), None, kernel)
@@ -173,7 +173,7 @@ def kernel_multiscale(α, x, β, y, blur=0.05, kernel=None, name=None, truncate=
     out = kernel_loss(cx.weights, cx.points, cy.weights, cy.points, blur=blur, kernel=kernel, name=name,
                       potentials=potentials, use_keops=True, ranges_xx=ranges_xx, ranges_yy=ranges_yy,
                       ranges_xy=ranges_xy)
-    if potentials:  # retour à l'ordre initial (GeomLoss rend l'ordre trié)
+    if potentials:  # back to the input order (GeomLoss returns the sorted order)
         F, G = out
         f, g = F.clone(), G.clone()
         f[cx.perm], g[cy.perm] = F, G

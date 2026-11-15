@@ -1,8 +1,8 @@
-"""Divergence de Sinkhorn entre images et barycentres : port de GeomLoss et softmin séparable.
+"""Sinkhorn divergence between images and barycenters: GeomLoss port and separable softmin.
 
-Sans KeOps, GeomLoss ne peut pas calculer ses softmins sur grille : la
-référence exécute l'algorithme de GeomLoss 0.3.1 avec une softmin dense Torch
-(monkeypatch), puis compare à remblais (softmin kernox).
+Without KeOps, GeomLoss cannot compute its grid softmins: the reference runs
+the GeomLoss 0.3.1 algorithm with a dense Torch softmin (monkeypatch), then
+compares with remblais (kernox softmin).
 """
 
 import numpy as np
@@ -19,11 +19,11 @@ try:
 except ImportError:  # pragma: no cover
     geomloss = None
 
-needs_geomloss = pytest.mark.skipif(geomloss is None, reason="geomloss 0.3.1 absent")
+needs_geomloss = pytest.mark.skipif(geomloss is None, reason="geomloss 0.3.1 not installed")
 
 
 def dense_softmin_grid(eps, p, h):
-    """Référence dense : LSE explicite (N × N) le long de chaque axe."""
+    """Dense reference: explicit (N × N) LSE along each axis."""
     D = h.dim() - 2
     N = h.shape[-1]
     x = torch.arange(N, dtype=h.dtype, device=h.device) / N
@@ -46,7 +46,7 @@ def images(B=2, K=1, N=16, D=2, seed=0, dtype=torch.float64, device="cpu"):
     shape = (B, K) + (N,) * D
     a = torch.rand(shape, generator=g, dtype=torch.float64) ** 4
     b = torch.rand(shape, generator=g, dtype=torch.float64) ** 4
-    a[..., : N // 4] = 0  # des pixels vides
+    a[..., : N // 4] = 0  # some empty pixels
     dims = tuple(range(2, 2 + D))
     a, b = a / a.sum(dims, keepdim=True), b / b.sum(dims, keepdim=True)
     return a.to(device=device, dtype=dtype), b.to(device=device, dtype=dtype)
@@ -88,7 +88,7 @@ def test_images_barycenter_matches_geomloss_algorithm(grad, monkeypatch, device)
     meas, _ = images(B=1, K=3, N=16, seed=2)
     w = torch.tensor([[0.2, 0.5, 0.3]], dtype=torch.float64)
     m_, w_ = meas.to(device), w.to(device)
-    if grad:  # GeomLoss : les itérations finales ne dérivent que par rapport aux poids
+    if grad:  # GeomLoss: the final iterations only differentiate with respect to the weights
         w_.requires_grad_(), w.requires_grad_()
     out = remblais.ImagesBarycenter(m_, w_, scaling_N=3)
     ref = gl_bary.ImagesBarycenter(meas, w, scaling_N=3)
@@ -100,10 +100,10 @@ def test_images_barycenter_matches_geomloss_algorithm(grad, monkeypatch, device)
 
 
 def test_sinkhorn_images_close_to_samples():
-    """La divergence sur grille approche celle de SamplesLoss entre les pixels pondérés (p = 2).
+    """The grid divergence approximates SamplesLoss between the weighted pixels (p = 2).
 
-    L'approximation multi-échelle de la grille disparaît quand scaling → 1
-    (écart 32 % pour scaling = 0,5, 0,3 % pour 0,97).
+    The multiscale approximation of the grid vanishes as scaling → 1
+    (32% difference for scaling = 0.5, 0.3% for 0.97).
     """
     a, b = images(B=1, N=16, seed=5)
     N = a.shape[-1]

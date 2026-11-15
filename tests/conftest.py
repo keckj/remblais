@@ -3,12 +3,12 @@ import os
 import pytest
 import torch
 
-# Les tests vérifient tous les ranges block-sparse envoyés à kernox.
+# The tests validate every block-sparse range sent to kernox.
 import remblais._kp  # noqa: E402
 
 remblais._kp.VALIDATE_RANGES = True
 
-# Les tests multiscale exercent les ranges : pas de repli dense (petits nuages).
+# The multiscale tests exercise the ranges: no dense fallback (small clouds).
 import remblais.clustering  # noqa: E402
 
 remblais.clustering.DENSE_RATIO = float("inf")
@@ -35,7 +35,7 @@ def device(request):
 
 
 def measures(N=60, M=50, D=2, B=None, dtype=torch.float64, device="cpu", seed=0, grad=False, shift=0.2):
-    """Deux mesures pondérées aléatoires (positions dans [0,1]^D, décalées)."""
+    """Two random weighted measures (positions in [0,1]^D, shifted)."""
     g = torch.Generator().manual_seed(seed)
     s = (B,) if B else ()
     x = torch.rand(*s, N, D, generator=g, dtype=torch.float64)
@@ -51,7 +51,7 @@ def measures(N=60, M=50, D=2, B=None, dtype=torch.float64, device="cpu", seed=0,
 
 @pytest.fixture(autouse=True)
 def _sync_after_test(request):
-    """Synchronise le GPU après chaque test : une faute asynchrone est imputée au bon cas."""
+    """Synchronizes the GPU after each test, so that an asynchronous fault is attributed to the right case."""
     yield
     dev = request.node.callspec.params.get("device") if hasattr(request.node, "callspec") else None
     if dev == "cuda":

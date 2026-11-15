@@ -646,5 +646,5 @@ class OTResultSample(OTResult):
 # - D is the number of coordinates per sample (= point)
 def barycenter_sample(*args, **kwargs):
     """Skeleton in GeomLoss 0.3.1 (its body refers to undefined names): raises ``NotImplementedError``."""
-    raise NotImplementedError("ot.barycenter_sample : simple squelette dans GeomLoss 0.3.1 ; non fourni par remblais.")
+    raise NotImplementedError("ot.barycenter_sample: only a skeleton in GeomLoss 0.3.1; not provided by remblais.")
 
