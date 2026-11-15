@@ -70,3 +70,10 @@ print(barycenter.shape)  # torch.Size([1, 1, 32, 32])
 iterations per level of the image pyramid, and `backward_iterations` the
 number of final iterations that are differentiated when an input requires a
 gradient.
+
+The returned image is not renormalized, exactly as in GeomLoss: with the
+default `blur=0` its total mass is often well below 1 (about 0.65 on random
+32×32 images), and it gets closer to 1 as `blur` grows (about 0.95 with
+`blur=0.05`). Divide by `barycenter.sum((2, 3), keepdim=True)` if you need a
+probability image. On the same inputs, remblais and GeomLoss 0.3.1 agree to
+within a few 1e-9 in float32.
