@@ -20,8 +20,6 @@ it has in GeomLoss.
 
 ## Custom costs and kernels
 
-::: remblais.keops_string_cost
-
 ::: remblais.Cost
     options:
       members: false

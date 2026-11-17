@@ -9,6 +9,7 @@ import torch
 from torch.nn import Module
 
 from . import _kp
+from .costs import is_symbolic_only
 from .hausdorff import hausdorff_multiscale, hausdorff_online, hausdorff_tensorized
 from .kernel_samples import kernel_multiscale, kernel_online, kernel_tensorized
 from .sinkhorn_samples import sinkhorn_multiscale, sinkhorn_online, sinkhorn_tensorized
@@ -66,10 +67,13 @@ class SamplesLoss(Module):
         between 0 and 1. Larger is slower and more accurate.
     :param truncate: ``multiscale`` backend: pairs of clusters whose interaction
         is below exp(−truncate) are skipped; ``None`` keeps every pair.
-    :param cost: a custom cost: a KeOps formula string such as
-        ``"Norm2(X-Y)"``, a Python function (on tensors with ``tensorized``, on
-        kernox formulas with ``online`` and ``multiscale``), a
-        ``(formula, dense routine)`` pair, or a ``remblais.Cost``.
+    :param cost: a custom cost: a function of kernox formulas ``x`` (``Vi``)
+        and ``y`` (``Vj``) returning a scalar formula, such as
+        ``lambda x, y: (x - y).norm2()`` (``backend="auto"`` then selects
+        ``online``); a ``(formula, dense routine)`` pair for the ``tensorized``
+        and ``multiscale`` backends; a function on tensors with
+        ``backend="tensorized"``; or a ``remblais.Cost``. KeOps formula strings
+        are not supported.
     :param kernel: a custom kernel, for ``loss="hausdorff"``.
     :param cluster_scale: ``multiscale`` backend: size of the grid cells;
         estimated from the data when ``None``.
@@ -122,6 +126,8 @@ class SamplesLoss(Module):
                 return "multiscale"
             raise ValueError('Explicit cluster labels are only supported with the "auto" and "multiscale" backends.')
         if backend == "auto":
+            if is_symbolic_only(self.cost):  # no dense routine: only the online backend applies
+                return "online"
             if M * N <= 5000**2:
                 return "tensorized"
             if D <= 3 and self.loss == "sinkhorn" and M * N > 10000**2 and self.p == 2:

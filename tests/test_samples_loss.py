@@ -185,14 +185,28 @@ def test_multiscale_explicit_labels(device):
 # ---------------------------------------------------------------------------------
 # Custom costs
 # ---------------------------------------------------------------------------------
-@pytest.mark.parametrize("backend", ["online", "tensorized"])
-@pytest.mark.parametrize("cost,p", [("(SqDist(X,Y) / IntCst(2))", 2), ("Norm2(X-Y)", 1),
-                                    ("SqNorm2(X-Y)*0.5", 2), ("(Sum(Square(X-Y)) / 2)", 2)])
-def test_keops_string_costs(cost, p, backend, device):
+SYMBOLIC_COSTS = [
+    (lambda x, y: x.sqdist(y) / 2, 2),
+    (lambda x, y: (x - y).norm2(), 1),
+    (lambda x, y: ((x - y) ** 2).sum() * 0.5, 2),
+]
+
+
+@pytest.mark.parametrize("cost,p", SYMBOLIC_COSTS, ids=["sqdist/2", "norm2", "sum-squares/2"])
+@pytest.mark.parametrize("backend", ["auto", "online"])
+def test_symbolic_costs(cost, p, backend, device):
     inputs = [t.to(device) for t in measures(B=2)]
     ref = SamplesLoss(backend="online", p=p)(*inputs)
     out = SamplesLoss(backend=backend, p=p, cost=cost)(*inputs)
     _close(out, ref, 1e-9, 1e-12)
+
+
+def test_symbolic_cost_selects_online():
+    loss = SamplesLoss(cost=lambda x, y: (x - y).norm2())
+    assert loss.select_backend(1, 10, 10, 2, False) == "online"
+    assert SamplesLoss().select_backend(1, 10, 10, 2, False) == "tensorized"
+    with_routine = SamplesLoss(cost=(lambda x, y: (x - y).norm2(), lambda x, y: torch.cdist(x, y)))
+    assert with_routine.select_backend(1, 10, 10, 2, False) == "tensorized"
 
 
 def test_kernox_formula_cost_batched(device):
@@ -214,11 +228,10 @@ def test_kernox_formula_cost_batched(device):
     _close(out_ms, SamplesLoss(backend="tensorized", cost=dense)(*one), 1e-9, 1e-12)
 
 
-def test_bad_keops_string():
-    with pytest.raises(ValueError, match="unsupported function"):
-        remblais.keops_string_cost("Foo(X,Y)")
-    with pytest.raises(ValueError, match="variable"):
-        remblais.keops_string_cost("SqDist(X,Z)")
+def test_keops_strings_are_rejected():
+    for cost in ("Norm2(X-Y)", ("Norm2(X-Y)", lambda x, y: torch.cdist(x, y))):
+        with pytest.raises(TypeError, match="kernox formulas"):
+            SamplesLoss(backend="online", cost=cost)(*measures())
 
 
 # ---------------------------------------------------------------------------------

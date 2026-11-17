@@ -67,19 +67,20 @@ The ground cost `C(x, y)` says how much it costs to move a unit of mass from
 - `p=2` (the default): `C(x, y) = ½‖x − y‖²`;
 - `p=1`: `C(x, y) = ‖x − y‖`.
 
-A custom cost can be given as a KeOps formula string, such as
-`"Norm2(X-Y)"`, which works with every backend:
+A custom cost is a Python function of symbolic kernox formulas: it receives
+`x`, indexed by `i`, and `y`, indexed by `j`, and returns a scalar formula.
+kernox simplifies it, differentiates it and compiles it into a fused GPU
+kernel; `backend="auto"` then always selects the `online` backend:
 
 ```python
-loss_l1 = SamplesLoss("sinkhorn", p=1, blur=0.05, cost="Norm2(X-Y)")
+loss_l1 = SamplesLoss("sinkhorn", p=1, blur=0.05, cost=lambda x, y: (x - y).norm2())
 print(loss_l1(x, y))
 ```
 
-It can also be a Python function. With the `tensorized` backend, the function
-receives tensors of shape `(B, N, D)` and `(B, M, D)` and returns the cost
-matrix `(B, N, M)`, as in GeomLoss. With the `online` and `multiscale`
-backends, it receives kernox formulas: `x` indexed by `i` and `y` by `j`, and
-returns a scalar formula. Anisotropic costs are a typical use:
+Every kernox operation is available (`kp.log`, `kp.clamp`, `kp.where`,
+`x.dot(y)`, components `x[0]`, ...; see the
+[kernox operations](https://keckj.github.io/kernox/operations/)). Anisotropic
+costs are a typical use:
 
 ```python
 import kernox as kp
@@ -90,12 +91,21 @@ def anisotropic(x, y):      # x, y: kernox formulas of dimension 2
     d = x - y
     return (scales[0] * d[0] ** 2 + scales[1] * d[1] ** 2) / 2
 
-loss = SamplesLoss("sinkhorn", blur=0.05, cost=anisotropic, backend="online")
+loss = SamplesLoss("sinkhorn", blur=0.05, cost=anisotropic)
 print(loss(x, y))
 ```
 
 The values of `scales` are part of the formula: the reduction is compiled for
 them, once.
+
+The `tensorized` and `multiscale` backends work on dense cost matrices. To use
+them with a custom cost, give a `(formula, dense routine)` pair, where the
+routine receives tensors of shape `(B, N, D)` and `(B, M, D)` and returns the
+cost matrix `(B, N, M)`. With `backend="tensorized"`, a plain function on
+tensors is also accepted, as in GeomLoss.
+
+KeOps formula strings such as `"Norm2(X-Y)"` are not supported: write the
+formula with kernox, as above.
 
 ## Blur, reach and scaling
 

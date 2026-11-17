@@ -29,9 +29,8 @@ As in GeomLoss, `ot` is a submodule: import it explicitly.
 
 - `SamplesLoss`: every loss (`"sinkhorn"`, `"hausdorff"`, `"energy"`,
   `"gaussian"`, `"laplacian"`), every parameter, the three calling
-  conventions, batches, `potentials=True`, the `backend="auto"` rule, custom
-  costs given as KeOps formula strings, custom kernels, explicit cluster
-  labels, and the messages of `verbose=True`. Inputs of invalid shapes raise
+  conventions, batches, `potentials=True`, the `backend="auto"` rule (except
+  for custom costs, see below), custom kernels, explicit cluster labels, and the messages of `verbose=True`. Inputs of invalid shapes raise
   the same errors with the same messages.
 - `backend="tensorized"` is pure PyTorch, as in GeomLoss: values and
   gradients are identical bit for bit, apart from the fixes listed below.
@@ -58,11 +57,14 @@ As in GeomLoss, `ot` is a submodule: import it explicitly.
 - **CPU.** kernox has no native CPU backend. On CPU tensors, the `online` and
   `multiscale` backends use the kernox oracle, a slow PyTorch reference: fine
   for tests, not for speed. `tensorized` is unchanged.
-- **Custom costs as Python functions.** With the `online` and `multiscale`
-  backends, a function given as `cost` (or as `kernel`) receives kernox
-  formulas, not PyKeOps `LazyTensor`s; see [Concepts](concepts.md#costs).
-  KeOps formula strings such as `"Norm2(X-Y)"` keep working, with every
-  backend.
+- **Custom costs are kernox formulas.** A function given as `cost` (or as
+  `kernel`) receives symbolic kernox formulas, not PyKeOps `LazyTensor`s, and
+  `backend="auto"` runs it with the `online` backend whatever the size; see
+  [Concepts](concepts.md#costs). KeOps formula strings such as `"Norm2(X-Y)"`
+  are **not supported**: `cost="Norm2(X-Y)"` becomes
+  `cost=lambda x, y: (x - y).norm2()`. The `tensorized` and `multiscale`
+  backends need a `(formula, dense routine)` pair; with
+  `backend="tensorized"`, a function on tensors works as in GeomLoss.
 - **`LazyTensor`.** The `ot` module uses `remblais.lazy.LazyTensor`, a small
   kernox-based replacement for the PyKeOps `LazyTensor`. It covers what
   `geomloss.ot` needs: i and j variables and parameters, `+ − × ÷`, `**2`,
