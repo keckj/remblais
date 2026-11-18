@@ -62,7 +62,9 @@ As in GeomLoss, `ot` is a submodule: import it explicitly.
   `backend="auto"` runs it with the `online` backend whatever the size; see
   [Concepts](concepts.md#costs). KeOps formula strings such as `"Norm2(X-Y)"`
   are **not supported**: `cost="Norm2(X-Y)"` becomes
-  `cost=lambda x, y: (x - y).norm2()`. The `tensorized` and `multiscale`
+  `cost=lambda x, y: (x - y).norm2()`; see
+  [Translating KeOps cost strings](#translating-keops-cost-strings) for the
+  whole correspondence. The `tensorized` and `multiscale`
   backends need a `(formula, dense routine)` pair; with
   `backend="tensorized"`, a function on tensors works as in GeomLoss.
 - **`LazyTensor`.** The `ot` module uses `remblais.lazy.LazyTensor`, a small
@@ -71,6 +73,67 @@ As in GeomLoss, `ot` is a submodule: import it explicitly.
   `exp`, `log`, `sqrt`, `abs`, `sum(-1)`, `(x|y)`, the `sum`, `logsumexp`,
   `min`, `max` and `arg*` reductions, `@`, `.T` and NumPy inputs. Python
   numbers become parameters of the compiled reduction.
+
+## Translating KeOps cost strings
+
+In GeomLoss, a custom cost is often a KeOps formula string in the variables
+`X` and `Y`. In remblais, it is a Python function `cost(x, y)` that receives
+two kernox formulas, `x` (indexed by `i`) and `y` (indexed by `j`), and
+returns a scalar formula. The translation is mechanical:
+
+| KeOps string | kernox formula |
+| --- | --- |
+| `X`, `Y` | `x`, `y` (the arguments of the function) |
+| `IntCst(3)`, `Var(...)` constants | Python numbers: `3`, `0.5`, ... |
+| `X + Y`, `X - Y`, `X * Y`, `X / Y`, `-X` | the same operators |
+| `Square(F)`, `Pow(F, 3)`, `Powf(F, G)` | `F ** 2` (or `kp.square(F)`), `F ** 3`, `F ** G` |
+| `Inv(F)` | `1 / F` |
+| `Exp`, `Log`, `Sqrt`, `Rsqrt`, `Sin`, `Cos`, `Asin`, `Acos`, `Atan`, `Abs`, `Sign` | `kp.exp`, `kp.log`, `kp.sqrt`, `kp.rsqrt`, `kp.sin`, `kp.cos`, `kp.asin`, `kp.acos`, `kp.atan`, `abs`, `kp.sign` |
+| `Clamp(F, a, b)` | `kp.clamp(F, a, b)` |
+| `Min(F, G)`, `Max(F, G)` (element-wise) | `kp.minimum(F, G)`, `kp.maximum(F, G)` |
+| `Elem(X, k)` | `x[k]` |
+| `Extract(X, k, d)` | `x[k:k + d]` |
+| `Concat(F, G)` | `kp.cat(F, G)` |
+| `Sum(F)` | `F.sum()` |
+| `(X\|Y)` | `x.dot(y)` |
+| `Norm2(F)`, `SqNorm2(F)` | `F.norm2()`, `F.sqnorm2()` |
+| `SqDist(X, Y)` | `x.sqdist(y)` |
+| `Normalize(F)` | `F.normalize()` |
+| `WeightedSqNorm(S, F)`, `WeightedSqDist(S, X, Y)` | `F.weightedsqnorm(S)`, `x.weightedsqdist(y, S)` (the weights come last) |
+| `Step(F)`, `ReLU(F)` | `F.step()`, `F.relu()` |
+| `IfElse(F, A, B)` | `F.ifelse(A, B)`, or `kp.where(F >= 0, A, B)` |
+
+The full list is in [kernox operations](https://keckj.github.io/kernox/operations/).
+A few costs, before and after:
+
+```python
+import kernox as kp
+from remblais import SamplesLoss
+
+# cost="Norm2(X-Y)"
+cost = lambda x, y: (x - y).norm2()
+
+# cost="Asin(Norm2(Normalize(X)-Normalize(Y))/IntCst(2))": half the angle between directions
+cost = lambda x, y: kp.asin((x.normalize() - y.normalize()).norm2() / 2)
+
+# cost=f"Log(Clamp(1-IntCst({k})*(X|Y), IntCst(1e-15), IntCst(1e15)))"
+k = 0.5
+cost = lambda x, y: kp.log(kp.clamp(1 - k * x.dot(y), 1e-15, 1e15))
+
+# cost="SqNorm2(Extract(X,0,2) - Extract(Y,0,2)) + Elem(X,2) + Elem(Y,2)"
+cost = lambda x, y: (x[0:2] - y[0:2]).sqnorm2() + x[2] + y[2]
+
+loss = SamplesLoss("sinkhorn", blur=0.05, cost=cost)
+```
+
+Since the cost is plain Python, intermediate variables, loops over
+components and helper functions all work. Python numbers, such as `k` above,
+are baked into the compiled kernel.
+
+To reuse a cost across `SamplesLoss` instances without compiling it again,
+wrap it in a `remblais.Cost` with a hashable key that identifies it, including
+its constants: `Cost(("log_one_minus_kxy", k), cost)`. Two costs with the same
+key share their compiled reductions.
 
 ## Deliberate differences
 
