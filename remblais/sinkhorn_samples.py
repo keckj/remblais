@@ -213,7 +213,7 @@ def _graph_iterations(cost, ws, consts):
     buffers) and on Python constants (ε, ρ, sizes) that are part of the key: no
     host cost per iteration on replay.
     """
-    key = (cost.key, consts, _kp.fast_math_enabled(), str(ws["a_log"].device), ws["a_log"].dtype,
+    key = (cost.key, consts, _kp.fast_math_enabled(), _kp.flush_denormals_enabled(), str(ws["a_log"].device), ws["a_log"].dtype,
            tuple((k, tuple(v.shape)) for k, v in sorted(ws.items())))
     if key in _GRAPH_FAILED:
         return _run_iterations(cost, ws, consts)

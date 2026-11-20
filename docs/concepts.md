@@ -180,3 +180,7 @@ dtype of your tensors. Like GeomLoss with PyKeOps, remblais uses approximate
 `exp` and `log` by default on NVIDIA GPUs in FP32. Pass `fast_math=False` to
 keep IEEE arithmetic everywhere; see
 [Coming from GeomLoss](geomloss.md#fast-math).
+Subnormal numbers are flushed to zero by default on the CPU and on NVIDIA
+GPUs in FP32, which makes narrow kernels faster without changing the losses;
+pass `flush_denormals=False` to keep them, see
+[Subnormal numbers](geomloss.md#subnormal-numbers).

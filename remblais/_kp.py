@@ -5,12 +5,15 @@ Each reduction is compiled **once** per (cost, D, dtype, backend): ε (or
 four softmins (xy, yx, xx, yy), the coarse and fine levels of the multiscale
 backend and successive calls to the loss share the same kernel.
 
-On the CPU, kernox has no native backend: the blockwise Torch oracle is used
-instead (an explicit reference, without a full M×N matrix).
+On the CPU, the native kernox backend (multithreaded, vectorized C++, kernox
+1.1 or later, Linux x86-64 with g++) is used when the host supports it, and the
+blockwise Torch oracle (an explicit reference, without a full M×N matrix)
+otherwise.
 """
 
 import contextlib
 import contextvars
+import functools
 import os
 import threading
 
@@ -29,8 +32,27 @@ def dtype_name(t):
 
 
 def backend_for(device):
-    """``oracle`` on the CPU (kernox has no native CPU backend), ``auto`` otherwise."""
-    return "oracle" if torch.device(device).type == "cpu" else "auto"
+    """``cpu`` (or ``oracle`` if the host cannot run it) on the CPU, ``auto`` otherwise."""
+    return _cpu_backend() if torch.device(device).type == "cpu" else "auto"
+
+
+@functools.lru_cache(maxsize=1)
+def _cpu_backend():
+    """Native kernox CPU backend if this host can run it, else the Torch oracle.
+
+    ``REMBLAIS_CPU_BACKEND=oracle`` forces the oracle (or ``cpu`` the native one)."""
+    forced = os.environ.get("REMBLAIS_CPU_BACKEND", "").strip().lower()
+    if forced in ("cpu", "oracle"):
+        return forced
+    try:
+        from kernox.backends.cpu import host_platform, toolchain
+
+        if host_platform() is None:
+            toolchain.compiler()
+            return "cpu"
+    except Exception:  # noqa: BLE001  (kernox < 1.1, no compiler, other host)
+        pass
+    return "oracle"
 
 
 # ---------------------------------------------------------------------------------
@@ -112,15 +134,47 @@ def default_fast_math(device, dtype):
     return device.type == "cuda" and torch.version.hip is None and dtype == torch.float32
 
 
+# Subnormal numbers flushed to zero (kernox flush_denormals option, cpu and CUDA)
+# for the plans compiled in this context; set by SamplesLoss like fast_math.
+_FLUSH = contextvars.ContextVar("remblais_flush_denormals", default=False)
+
+
+@contextlib.contextmanager
+def flush_denormals(flag):
+    """Context manager: kernox plans compiled in it use ``flush_denormals=flag``."""
+    token = _FLUSH.set(bool(flag))
+    try:
+        yield
+    finally:
+        _FLUSH.reset(token)
+
+
+def flush_denormals_enabled():
+    return _FLUSH.get()
+
+
+def default_flush_denormals(device, dtype):
+    """Default setting: flush on the CPU and on NVIDIA GPUs in FP32 (PyKeOps'
+    use_fast_math implies --ftz=true, hence GeomLoss), keep them elsewhere.
+    The softmins and kernel sums of remblais do not depend on subnormal terms."""
+    device = torch.device(device)
+    return device.type == "cpu" or default_fast_math(device, dtype)
+
+
 def _plan(key, build, dtype, backend):
     fm = _FAST_MATH.get() and backend != "oracle"
-    full = key + (dtype, backend, fm)
+    fd = _FLUSH.get() and backend != "oracle"
+    full = key + (dtype, backend, fm, fd)
     run = _PLANS.get(full)
     if run is None:
         with _LOCK:
             run = _PLANS.get(full)
             if run is None:
-                run = kp.compile(build(), dtype=dtype, backend=backend, **({"fast_math": True} if fm else {}))
+                opts = {**({"fast_math": True} if fm else {}), **({"flush_denormals": True} if fd else {})}
+                run = kp.compile(build(), dtype=dtype, backend=backend, **opts)
+                if backend == "cpu" and not kp.get_backend("cpu").supports(run.plan, torch.device("cpu")).ok:
+                    # e.g. FP16 without _Float16 in the compiler: Torch reference instead.
+                    run = kp.compile(build(), dtype=dtype, backend="oracle")
                 _PLANS[full] = run
     return run
 

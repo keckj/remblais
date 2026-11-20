@@ -5,7 +5,7 @@
 </p>
 
 remblais computes geometric losses between measures on NVIDIA (CUDA), AMD
-(ROCm/HIP) and Intel (SYCL) GPUs: Sinkhorn divergences (entropic optimal
+(ROCm/HIP) and Intel (SYCL) GPUs, and on x86-64 CPUs: Sinkhorn divergences (entropic optimal
 transport), kernel norms (MMD) and Hausdorff divergences between point clouds,
 images and volumes. It is a drop-in
 replacement for [GeomLoss](https://www.kernel-operations.io/geomloss/) 0.3.1,
@@ -24,10 +24,11 @@ built on [kernox](https://github.com/keckj/kernox) instead of PyKeOps: write
 - **Faster.** Every softmin is one fused kernox reduction, compiled once and
   reused for all values of ε; the debiased Sinkhorn loop fuses its four
   softmins into two reductions per iteration.
-- **NVIDIA, AMD and Intel GPUs.** The `online` and `multiscale` backends,
-  which GeomLoss runs through PyKeOps on NVIDIA GPUs only, run here on CUDA,
-  ROCm/HIP and SYCL through kernox. remblais's own test suite runs on NVIDIA
-  and Intel GPUs; on AMD GPUs it relies on kernox's tested HIP backend.
+- **NVIDIA, AMD and Intel GPUs, and CPUs.** The `online` and `multiscale`
+  backends, which GeomLoss runs through PyKeOps on NVIDIA GPUs only, run here
+  on CUDA, ROCm/HIP and SYCL through kernox, and on x86-64 Linux CPUs as
+  multithreaded, vectorized C++. remblais's own test suite runs on the CPU,
+  NVIDIA and Intel GPUs; on AMD GPUs it relies on kernox's tested HIP backend.
 - **Fixes, not surprises.** A few GeomLoss bugs are fixed (the gradient of
   unbalanced transport, `"hausdorff"` without a kernel, ...). Every
   difference is listed in [Coming from GeomLoss](docs/geomloss.md).
@@ -41,6 +42,13 @@ both from PyPI. For an NVIDIA GPU:
 ```sh
 pip install torch --index-url https://download.pytorch.org/whl/cu126
 pip install "kernox[cuda]"
+pip install remblais
+```
+
+On the CPU only (x86-64 Linux, with `g++` 12 or later for the fast path):
+
+```sh
+pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install remblais
 ```
 
@@ -95,5 +103,5 @@ and notice are in [`THIRD_PARTY.md`](THIRD_PARTY.md).
 ## Related projects
 
 - GeomLoss, the original library: <https://github.com/jeanfeydy/geomloss>
-- kernox, fused GPU reductions: <https://github.com/keckj/kernox>
+- kernox, fused GPU and CPU reductions: <https://github.com/keckj/kernox>
 - symox, symbolic engine and code generation: <https://github.com/keckj/symox>

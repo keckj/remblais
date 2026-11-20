@@ -54,9 +54,10 @@ As in GeomLoss, `ot` is a submodule: import it explicitly.
 
 - **GPU vendors.** remblais runs on NVIDIA, AMD and Intel GPUs, wherever
   kernox does.
-- **CPU.** kernox has no native CPU backend. On CPU tensors, the `online` and
-  `multiscale` backends use the kernox oracle, a slow PyTorch reference: fine
-  for tests, not for speed. `tensorized` is unchanged.
+- **CPU.** On CPU tensors, the `online` and `multiscale` backends run on the
+  kernox CPU backend: multithreaded, vectorized C++ on x86-64 Linux with
+  `g++`. On other hosts (macOS, ARM), they fall back to the kernox oracle, a
+  slow PyTorch reference. `tensorized` is unchanged.
 - **Custom costs are kernox formulas.** A function given as `cost` (or as
   `kernel`) receives symbolic kernox formulas, not PyKeOps `LazyTensor`s, and
   `backend="auto"` runs it with the `online` backend whatever the size; see
@@ -190,7 +191,8 @@ purpose, usually because GeomLoss has a bug there.
 
 - **Batched custom costs.** With `backend="online"`, a custom cost works with
   batched inputs `(B, N, D)`; GeomLoss raises `ValueError`.
-- **`fast_math`.** A new `SamplesLoss` argument, described below.
+- **`fast_math`** and **`flush_denormals`.** New `SamplesLoss` arguments,
+  described below.
 
 ## Fast math
 
@@ -205,7 +207,7 @@ the same by default, and makes it explicit with the `fast_math` argument of
 - `fast_math=False`: IEEE arithmetic everywhere. Results are then
   reproducible bit for bit from one run to the next.
 - `fast_math=True`: asks kernox for fast math explicitly. It has no effect in
-  FP64 and on the CPU oracle, and is refused by the kernox backends that do
+  FP64 and on the CPU, and is refused by the kernox backends that do
   not offer it.
 
 The relative error of the approximate `exp` is at most 2⁻²¹ + |x| · 2⁻²⁴
@@ -223,3 +225,24 @@ y = torch.rand(1_000, 3, device=device)
 ieee = SamplesLoss("sinkhorn", blur=0.05, fast_math=False)
 print(ieee(x, y))
 ```
+
+
+## Subnormal numbers
+
+Subnormal numbers are the tiny values below about 10⁻³⁸ in FP32 (10⁻³⁰⁸ in
+FP64). An operation that produces one is many times slower on CPUs, and the
+Gaussian kernels and softmins of remblais produce many when the blur is small.
+They never change a loss or a gradient in practice: a softmin sums terms whose
+largest is 1, and a kernel norm holds terms equal to 1 (`k(x, x)`).
+
+PyKeOps' `-use_fast_math` also flushes subnormal numbers to zero on NVIDIA
+GPUs. remblais does the same by default, with the `flush_denormals` argument of
+`SamplesLoss`:
+
+- `flush_denormals=None` (the default): subnormal numbers are flushed to zero
+  in the kernox reductions on the CPU and on NVIDIA GPUs in FP32; they are
+  kept elsewhere (AMD, Intel GPUs, FP64 on NVIDIA GPUs).
+- `flush_denormals=False`: kept everywhere, as IEEE arithmetic requires.
+- `flush_denormals=True`: asks kernox to flush them explicitly. It has no
+  effect in FP64 on NVIDIA GPUs, and is refused by the kernox backends that
+  do not offer it.

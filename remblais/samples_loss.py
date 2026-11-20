@@ -88,13 +88,17 @@ class SamplesLoss(Module):
         ``exp`` and ``log`` in the kernox reductions on NVIDIA GPUs in FP32, as
         PyKeOps does under GeomLoss, and IEEE arithmetic elsewhere. ``False``:
         IEEE arithmetic everywhere. ``True``: ask kernox for fast math (no effect
-        in FP64 and on the CPU oracle, refused by the backends that do not offer
-        it).
+        in FP64 and on the CPU, refused by the backends that do not offer it).
+    :param flush_denormals: specific to remblais. ``None`` (default): subnormal
+        numbers flushed to zero in the kernox reductions on the CPU and on NVIDIA
+        GPUs in FP32 (as PyKeOps does under GeomLoss), kept elsewhere. ``False``:
+        kept everywhere. ``True``: ask kernox to flush them (no effect in FP64 on
+        NVIDIA GPUs, refused by the backends that do not offer it).
     """
 
     def __init__(self, loss="sinkhorn", p=2, blur=0.05, reach=None, diameter=None, scaling=0.5, truncate=5,
                  cost=None, kernel=None, cluster_scale=None, debias=True, potentials=False, verbose=False,
-                 backend="auto", fast_math=None):
+                 backend="auto", fast_math=None, flush_denormals=None):
         super().__init__()
         if loss not in routines or loss == "hausdorff_kernel":
             raise ValueError(f"unknown loss {loss!r}: expected sinkhorn, hausdorff, energy, gaussian or laplacian")
@@ -117,6 +121,9 @@ class SamplesLoss(Module):
         if fast_math not in (None, True, False):
             raise ValueError(f"fast_math: expected None, True or False, got {fast_math!r}")
         self.fast_math = fast_math
+        if flush_denormals not in (None, True, False):
+            raise ValueError(f"flush_denormals: expected None, True or False, got {flush_denormals!r}")
+        self.flush_denormals = flush_denormals
 
     def select_backend(self, B, N, M, D, labelled):
         """Rule used by ``backend="auto"`` (the one of GeomLoss v0.3.1)."""
@@ -159,7 +166,10 @@ class SamplesLoss(Module):
         fm = self.fast_math
         if fm is None:
             fm = _kp.default_fast_math(x.device, x.dtype)
-        with _kp.fast_math(fm):
+        fd = self.flush_denormals
+        if fd is None:
+            fd = _kp.default_flush_denormals(x.device, x.dtype)
+        with _kp.fast_math(fm), _kp.flush_denormals(fd):
             values = routines[loss][backend](
                 α, x, β, y, p=self.p, blur=self.blur, reach=self.reach, diameter=self.diameter,
                 scaling=self.scaling, truncate=self.truncate, cost=self.cost, kernel=self.kernel,

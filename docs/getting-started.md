@@ -6,11 +6,11 @@ two point clouds, then its gradient.
 ## Requirements
 
 - Python 3.10 or later, PyTorch, NumPy and SciPy.
-- [kernox](https://github.com/keckj/kernox), the library of fused GPU
+- [kernox](https://github.com/keckj/kernox), the library of fused GPU and CPU
   reductions remblais is built on, and [symox](https://github.com/keckj/symox),
   the symbolic engine of kernox. Both are on PyPI.
-- A GPU supported by kernox for speed: NVIDIA (CUDA), AMD (ROCm) or Intel
-  (XPU). Without one, remblais still runs on the CPU, slowly (see
+- A GPU supported by kernox: NVIDIA (CUDA), AMD (ROCm) or Intel (XPU), or
+  an x86-64 Linux CPU with `g++` 12 or later (see
   [Running without a GPU](#running-without-a-gpu)).
 
 ## Install kernox
@@ -102,11 +102,33 @@ transport one cloud onto the other.
 
 ## Running without a GPU
 
-kernox has no native CPU backend. On CPU tensors, remblais uses the dense
-PyTorch implementation (`backend="tensorized"`) for small problems, and the
-kernox *oracle*, a slow blockwise PyTorch reference, for the `online` and
-`multiscale` backends. Results are correct, but do not expect GPU speed.
-Every example of this documentation runs this way in the test suite.
+On CPU tensors, the `online` and `multiscale` backends run on the
+[CPU backend of kernox](https://keckj.github.io/kernox/backend-cpu/). It turns
+each formula into C++ that uses every core (OpenMP) and the SIMD units of the
+processor. It needs an x86-64 Linux machine with `g++` 12 or later. The first
+call of each formula compiles it, which takes a few seconds; later calls,
+including in later sessions, reuse the compiled code. Small problems use the
+dense PyTorch implementation (`backend="tensorized"`), as on GPUs.
+
+Sinkhorn divergence, N = M = 10⁴ points in 3D, float32, forward and backward,
+8 threads of a Xeon:
+
+| Backend | Time |
+| --- | --- |
+| `online`, kernox CPU backend | 1.0 s |
+| `tensorized` (dense PyTorch) | 19 s |
+| `online`, kernox oracle | 31 s |
+
+When the machine cannot run the CPU backend (no `g++`, not x86-64), remblais
+falls back to the kernox *oracle*, a slow blockwise PyTorch reference. Set
+`REMBLAIS_CPU_BACKEND=oracle` or `REMBLAIS_CPU_BACKEND=cpu` to force the
+choice. Every example of this documentation runs on the CPU in the test suite.
+
+On the CPU, subnormal numbers (below about 10⁻³⁸ in FP32) are flushed to zero
+in the kernox reductions by default: in practice they do not change a loss or
+a gradient, and narrow Gaussian kernels run up to 4.8 times faster on Intel
+CPUs. Pass `flush_denormals=False` to `SamplesLoss` to keep them; see
+[Subnormal numbers](geomloss.md#subnormal-numbers).
 
 ## Next steps
 

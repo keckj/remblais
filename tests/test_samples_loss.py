@@ -457,9 +457,40 @@ def test_cuda_graph_iterations_equal_eager(dtype, monkeypatch):
     assert len(rs._GRAPH_FAILED) == 0
 
 
+def test_flush_denormals_option(device):
+    """flush_denormals: enabled by default on the CPU and on CUDA FP32; the losses
+    and gradients do not depend on subnormal terms (small blur: many of them)."""
+    from remblais import _kp
+
+    with pytest.raises(ValueError):
+        SamplesLoss(flush_denormals="yes")
+    cuda32 = device.type == "cuda" and torch.version.hip is None
+    assert _kp.default_flush_denormals(device, torch.float32) == (device.type == "cpu" or cuda32)
+    assert _kp.default_flush_denormals(device, torch.float64) == (device.type == "cpu")
+    for dtype in (torch.float32, torch.float64):
+        a, x, b, y = measures(N=300, M=280, D=3, dtype=dtype, device=device)
+        if device.type == "xpu" or (device.type == "cuda" and torch.version.hip is not None):
+            import kernox as kp
+
+            with pytest.raises(kp.UnsupportedError):
+                SamplesLoss("sinkhorn", blur=0.01, backend="online", flush_denormals=True)(a, x, b, y)
+            continue
+        tol = dict(rtol=1e-5, atol=1e-7) if dtype == torch.float32 else dict(rtol=1e-12, atol=1e-15)
+        for loss in ("sinkhorn", "gaussian"):
+            res = {}
+            for fd in (None, True, False):
+                xr = x.clone().requires_grad_()
+                L = SamplesLoss(loss, blur=0.01, backend="online", flush_denormals=fd)(a, xr, b, y)
+                res[fd] = (L.detach(), torch.autograd.grad(L, [xr])[0])
+            dflt = bool(_kp.default_flush_denormals(device, dtype))
+            assert torch.equal(res[None][0], res[dflt][0]) and torch.equal(res[None][1], res[dflt][1])
+            torch.testing.assert_close(res[True][0], res[False][0], **tol)
+            torch.testing.assert_close(res[True][1], res[False][1], **tol)
+
+
 def test_fast_math_option(device):
     """fast_math: enabled by default only on CUDA FP32; approximate but close to IEEE;
-    no effect in FP64 and on the CPU oracle."""
+    no effect in FP64 and on the CPU."""
     from remblais import _kp
 
     with pytest.raises(ValueError):

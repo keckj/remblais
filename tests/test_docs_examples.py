@@ -3,7 +3,7 @@
 The blocks of one page run in order, in a single namespace, on the CPU: the
 line ``device = "cuda"`` that opens the GPU examples is replaced by
 ``device = "cpu"``, where remblais computes with the dense PyTorch backend
-and the kernox oracle. The examples themselves are left unchanged, so they
+and the kernox CPU backend. The examples themselves are left unchanged, so they
 read exactly as a user would type them.
 
 A block preceded by the comment ``<!-- skip-test -->`` is not run (GeomLoss
