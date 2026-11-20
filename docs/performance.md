@@ -2,8 +2,8 @@
 
 The goal of remblais is to be **at least as fast as GeomLoss** wherever
 GeomLoss runs, and to bring the same speed to AMD and Intel GPUs, which
-PyKeOps does not support. In every case measured so far, on an NVIDIA GPU,
-remblais is already faster than GeomLoss.
+PyKeOps does not support. On an NVIDIA GPU, remblais is faster than GeomLoss
+in every case measured so far.
 
 ## Where the speed comes from
 
@@ -31,80 +31,135 @@ remblais is already faster than GeomLoss.
 
 Debiased Sinkhorn divergence, p = 2, blur = 0.05, scaling = 0.5, FP32, N = M.
 The time is that of a forward and a backward pass (gradient with respect to
-`x`), median of 5 calls after 2 warm-up calls (1 + 1 at N = 10⁶), on an RTX
-2080 Ti with PyTorch 2.11 (CUDA 12.8). Data: `x` uniform in [0, 1]ᴰ, `y`
-uniform in [0.05, 0.95]ᴰ and shifted by 0.2 along the first axis, random
-normalized weights.
+`x`), median of 5 calls after 2 warm-up calls (1 + 1 at N = 10⁶). Data: `x`
+uniform in [0, 1]ᴰ, `y` uniform in [0.05, 0.95]ᴰ and shifted by 0.2 along the
+first axis, random normalized weights.
 
-remblais runs with its default `fast_math` setting; the `IEEE` column is
-`fast_math=False`. GeomLoss 0.3.1 runs with PyKeOps 2.4b in its best
-configuration (see [Measuring PyKeOps](#measuring-pykeops)). Times in
-milliseconds; ratios lower than 1 mean that remblais is faster.
+remblais runs with its default settings; the `IEEE` column is
+`fast_math=False, flush_denormals=False` (no approximate `exp`/`log`, subnormal
+numbers kept). GeomLoss 0.3.1 runs with PyKeOps 2.3 in its best configuration
+(see [Measuring PyKeOps](#measuring-pykeops)). Times in milliseconds; the
+ratios are GeomLoss time / remblais time, above 1 when remblais is faster.
+To reproduce: `python tools/bench_geomloss.py` (GPU) or
+`python tools/bench_geomloss.py --device cpu --threads 192` (CPU).
 
-### multiscale, D = 2
+### RTX 5090
 
-| N | remblais | remblais IEEE | GeomLoss | remblais / GeomLoss | IEEE / GeomLoss |
+PyTorch 2.11 (CUDA 12.8), kernox 1.1.0, remblais 2.1.0.
+
+#### multiscale, D = 2
+
+| N | remblais | remblais IEEE | GeomLoss | GeomLoss / remblais | GeomLoss / IEEE |
 | --- | --- | --- | --- | --- | --- |
-| 10⁴ | 11.0 | 11.4 | 24.4 | ×0.45 | ×0.47 |
-| 10⁵ | 10.7 | 11.0 | 26.4 | ×0.40 | ×0.42 |
-| 10⁶ | 34.7 | 39.8 | 43.9 | ×0.79 | ×0.91 |
+| 10⁴ | 8.34 | 9.14 | 16.7 | × 2.00 | × 1.83 |
+| 10⁵ | 8.86 | 9.01 | 17.1 | × 1.93 | × 1.89 |
+| 10⁶ | 12.0 | 12.7 | 21.5 | × 1.80 | × 1.70 |
 
-### multiscale, D = 3
+#### multiscale, D = 3
 
-| N | remblais | remblais IEEE | GeomLoss | remblais / GeomLoss | IEEE / GeomLoss |
+| N | remblais | remblais IEEE | GeomLoss | GeomLoss / remblais | GeomLoss / IEEE |
 | --- | --- | --- | --- | --- | --- |
-| 10⁴ | 14.2 | 13.9 | 54.5 | ×0.26 | ×0.26 |
-| 10⁵ | 150 | 171 | 162 | ×0.92 | ×1.06 |
-| 10⁶ | 8795 | 10675 | 9165 | ×0.96 | ×1.16 |
+| 10⁴ | 11.1 | 11.7 | 26.9 | × 2.43 | × 2.29 |
+| 10⁵ | 50.4 | 52.7 | 64.8 | × 1.29 | × 1.23 |
+| 10⁶ | 1820 | 2140 | 2100 | × 1.15 | × 0.98 |
 
-### online, D = 2
+#### online, D = 2
 
-| N | remblais | remblais IEEE | GeomLoss | remblais / GeomLoss | IEEE / GeomLoss |
+| N | remblais | remblais IEEE | GeomLoss | GeomLoss / remblais | GeomLoss / IEEE |
 | --- | --- | --- | --- | --- | --- |
-| 10³ | 11.5 | 8.87 | 19.5 | ×0.59 | ×0.46 |
-| 3·10³ | 9.92 | 8.22 | 22.8 | ×0.44 | ×0.36 |
-| 10⁴ | 10.3 | 12.1 | 31.2 | ×0.33 | ×0.39 |
-| 3·10⁴ | 65.8 | 83.9 | 112 | ×0.59 | ×0.75 |
-| 10⁵ | 713 | 906 | 844 | ×0.84 | ×1.07 |
-| 10⁶ | 73206 | 92872 | 81799 | ×0.89 | ×1.14 |
+| 10³ | 5.21 | 5.22 | 13.4 | × 2.58 | × 2.57 |
+| 3·10³ | 5.42 | 5.34 | 16.4 | × 3.02 | × 3.07 |
+| 10⁴ | 5.43 | 5.50 | 27.4 | × 5.05 | × 4.99 |
+| 3·10⁴ | 13.0 | 16.3 | 58.7 | × 4.53 | × 3.59 |
+| 10⁵ | 143 | 177 | 297 | × 2.07 | × 1.68 |
+| 10⁶ | 14300 | 17900 | 20100 | × 1.41 | × 1.13 |
 
-### online, D = 3
+#### online, D = 3
 
-| N | remblais | remblais IEEE | GeomLoss | remblais / GeomLoss | IEEE / GeomLoss |
+| N | remblais | remblais IEEE | GeomLoss | GeomLoss / remblais | GeomLoss / IEEE |
 | --- | --- | --- | --- | --- | --- |
-| 10³ | 9.66 | 9.07 | 19.7 | ×0.49 | ×0.46 |
-| 3·10³ | 9.84 | 8.28 | 24.7 | ×0.40 | ×0.33 |
-| 10⁴ | 11.1 | 13.5 | 35.6 | ×0.31 | ×0.38 |
-| 3·10⁴ | 87.6 | 106 | 143 | ×0.61 | ×0.75 |
-| 10⁵ | 944 | 1137 | 1104 | ×0.85 | ×1.03 |
-| 10⁶ | 96878 | 116037 | 107123 | ×0.90 | ×1.08 |
+| 10³ | 5.64 | 5.64 | 14.7 | × 2.60 | × 2.60 |
+| 3·10³ | 5.59 | 5.69 | 18.3 | × 3.28 | × 3.22 |
+| 10⁴ | 5.60 | 5.75 | 31.4 | × 5.62 | × 5.47 |
+| 3·10⁴ | 17.2 | 20.2 | 68.7 | × 4.00 | × 3.40 |
+| 10⁵ | 190 | 221 | 330 | × 1.73 | × 1.50 |
+| 10⁶ | 19400 | 23100 | 23300 | × 1.20 | × 1.01 |
 
-### online, D = 64
+#### online, D = 64
 
-| N | remblais | remblais IEEE | GeomLoss | remblais / GeomLoss | IEEE / GeomLoss |
+| N | remblais | remblais IEEE | GeomLoss | GeomLoss / remblais | GeomLoss / IEEE |
 | --- | --- | --- | --- | --- | --- |
-| 10³ | 10.4 | 10.2 | 55.0 | ×0.19 | ×0.19 |
-| 3·10³ | 16.4 | 18.6 | 96.4 | ×0.17 | ×0.19 |
-| 10⁴ | 131 | 135 | 292 | ×0.45 | ×0.46 |
-| 3·10⁴ | 1127 | 1163 | 2508 | ×0.45 | ×0.46 |
-| 10⁵ | 12737 | 13026 | 23700 | ×0.54 | ×0.55 |
+| 10³ | 6.53 | 6.64 | 31.2 | × 4.78 | × 4.70 |
+| 3·10³ | 6.88 | 6.87 | 61.8 | × 8.98 | × 9.00 |
+| 10⁴ | 23.8 | 24.0 | 169 | × 7.11 | × 7.05 |
+| 3·10⁴ | 208 | 211 | 490 | × 2.36 | × 2.32 |
+| 10⁵ | 2350 | 2420 | 6140 | × 2.61 | × 2.54 |
+
+For small clouds, the time of remblais is almost constant (about 5 ms): it is
+the host overhead of the Sinkhorn loop, not the GPU work. At large N in
+dimension 3 or less, almost all the time is spent in the log-sum-exp
+reductions themselves, so the margin follows the throughput of the kernox
+reduction against that of PyKeOps: × 1.15 to × 1.4 at N = 10⁶. With IEEE
+arithmetic, remblais is on par with GeomLoss (which uses fast math) in
+multiscale D = 3 at N = 10⁶ (× 0.98) and faster everywhere else.
+
+### CPU: 2 × AMD EPYC 9654
+
+192 cores, 192 threads pinned (`OMP_PROC_BIND=close OMP_PLACES=cores`),
+PyTorch 2.15.0+cpu, kernox from its main branch with its CPU backend (it
+includes a fix of the next kernox release: with kernox 1.1.0, the N = 10³
+cases are about three times slower at 192 threads); GeomLoss runs on the CPU
+backend of PyKeOps 2.3, which compiles without fast math: the IEEE column is
+the like-for-like comparison.
+
+#### multiscale, D = 2
+
+| N | remblais | remblais IEEE | GeomLoss | GeomLoss / remblais | GeomLoss / IEEE |
+| --- | --- | --- | --- | --- | --- |
+| 10⁴ | 23.6 | 22.6 | 31.4 | × 1.33 | × 1.39 |
+| 10⁵ | 55.9 | 56.0 | 88.5 | × 1.58 | × 1.58 |
+
+#### multiscale, D = 3
+
+| N | remblais | remblais IEEE | GeomLoss | GeomLoss / remblais | GeomLoss / IEEE |
+| --- | --- | --- | --- | --- | --- |
+| 10⁴ | 40.9 | 44.1 | 901 | × 22.0 | × 20.4 |
+| 10⁵ | 347 | 348 | 4590 | × 13.2 | × 13.2 |
+
+#### online, D = 2
+
+| N | remblais | remblais IEEE | GeomLoss | GeomLoss / remblais | GeomLoss / IEEE |
+| --- | --- | --- | --- | --- | --- |
+| 10³ | 3.78 | 3.86 | 8.94 | × 2.37 | × 2.32 |
+| 10⁴ | 20.7 | 21.5 | 159 | × 7.68 | × 7.40 |
+| 10⁵ | 1410 | 1500 | 14400 | × 10.2 | × 9.60 |
+
+#### online, D = 3
+
+| N | remblais | remblais IEEE | GeomLoss | GeomLoss / remblais | GeomLoss / IEEE |
+| --- | --- | --- | --- | --- | --- |
+| 10³ | 4.16 | 4.06 | 9.97 | × 2.40 | × 2.45 |
+| 10⁴ | 23.0 | 24.3 | 188 | × 8.18 | × 7.74 |
+| 10⁵ | 1630 | 1740 | 17300 | × 10.6 | × 9.89 |
+
+#### online, D = 64
+
+| N | remblais | remblais IEEE | GeomLoss | GeomLoss / remblais | GeomLoss / IEEE |
+| --- | --- | --- | --- | --- | --- |
+| 10³ | 9.84 | 9.98 | 26.1 | × 2.66 | × 2.62 |
+| 10⁴ | 154 | 154 | 1380 | × 8.95 | × 8.96 |
 
 For N ≤ 10⁴, the FP32 value of remblais is within 9·10⁻¹⁰ to 1·10⁻⁷ (relative)
 of an FP64 reference, with or without fast math.
 
 These figures cover only the cases listed; they are not a general claim of
-superiority over GeomLoss on every workload or card. A case where remblais is
-slower than GeomLoss is treated as a bug.
-
-At large N in dimension 3 or less, almost all the time is spent in the
-log-sum-exp reductions themselves, so the margin follows the throughput of
-the kernox reduction against that of PyKeOps. With IEEE arithmetic
-(`fast_math=False`), remblais is up to 16 % slower than GeomLoss in some of
-these cases (D ≤ 3, N ≥ 10⁵), and faster everywhere else.
+superiority over GeomLoss on every workload or machine. A case where remblais
+is slower than GeomLoss is treated as a bug.
 
 ## Measuring PyKeOps
 
-PyKeOps 2.4b does not always produce the same kernel for the same formula.
+PyKeOps does not always produce the same kernel for the same formula (seen
+with PyKeOps 2.4b on an RTX 2080 Ti).
 When the D = 3 log-sum-exp kernel is the first one compiled in a process, it
 uses an approximate `exp` (26 ms at N = 10⁵); when it is compiled after the
 D = 2 kernel in the same process, it uses the IEEE `expf` (39 ms). The
@@ -113,7 +168,9 @@ D = 2 kernel in the same process, it uses the IEEE `expf` (39 ms). The
 The GeomLoss figures above are its best case: one fresh process and one fresh
 build folder for each configuration, so that the kernel being measured is
 always the first one compiled, as for a user who works in a single dimension.
-This is why remblais is compared with its fast math setting on.
+This is why remblais is compared with its fast math setting on. On the CPU,
+PyKeOps compiles with `-O3 -fopenmp`, without fast math: the IEEE column is
+then the like-for-like comparison.
 
 ## Tuning
 

@@ -63,28 +63,36 @@ and in [Getting started](docs/getting-started.md).
 ## Performance
 
 The goal of remblais is to be **at least as fast as GeomLoss** wherever
-GeomLoss runs. In the cases measured so far, it is already faster.
+GeomLoss runs. In every case measured so far, on an NVIDIA GPU and on the
+CPU, it is faster.
 
-Sinkhorn divergence, p = 2, FP32, forward and backward passes, on an RTX 2080
-Ti; remblais with `fast_math`, its default setting, against GeomLoss 0.3.1 in
-its best configuration (each PyKeOps kernel compiled alone in a fresh
-process). Time ratios remblais / GeomLoss, lower than 1 when remblais is
-faster:
+Sinkhorn divergence, p = 2, FP32, forward and backward passes, on an RTX
+5090; remblais with its default settings, against GeomLoss 0.3.1 with PyKeOps
+2.3 in its best configuration (each PyKeOps kernel compiled alone in a fresh
+process). Speed-up of remblais (GeomLoss time / remblais time):
 
-| Case | N = 10⁴ | N = 10⁵ | N = 10⁶ |
+| Case | N = 10³ | N = 10⁴ | N = 10⁵ | N = 10⁶ |
+| --- | --- | --- | --- | --- |
+| multiscale, D = 2 | | × 2.0 | × 1.9 | × 1.8 |
+| multiscale, D = 3 | | × 2.4 | × 1.3 | × 1.15 |
+| online, D = 2 | × 2.6 | × 5.1 | × 2.1 | × 1.4 |
+| online, D = 3 | × 2.6 | × 5.6 | × 1.7 | × 1.2 |
+| online, D = 64 | × 4.8 | × 7.1 | × 2.6 | not measured |
+
+On the CPU (2 × AMD EPYC 9654, 192 threads), against GeomLoss on the CPU
+backend of PyKeOps:
+
+| Case | N = 10³ | N = 10⁴ | N = 10⁵ |
 | --- | --- | --- | --- |
-| multiscale, D = 2 | ×0.45 | ×0.40 | ×0.79 |
-| multiscale, D = 3 | ×0.26 | ×0.92 | ×0.96 |
-| online, D = 2 | ×0.33 | ×0.84 | ×0.89 |
-| online, D = 3 | ×0.31 | ×0.85 | ×0.90 |
-| online, D = 64 | ×0.45 | ×0.54 | not measured |
-
-For small clouds (N = 10³ to 3·10⁴), the online backend runs at ×0.31 to
-×0.61 of the GeomLoss time in D = 2 and 3, and at ×0.17 to ×0.45 in D = 64.
+| multiscale, D = 2 | | × 1.3 | × 1.6 |
+| multiscale, D = 3 | | × 22 | × 13 |
+| online, D = 2 | × 2.4 | × 7.7 | × 10 |
+| online, D = 3 | × 2.4 | × 8.2 | × 11 |
+| online, D = 64 | × 2.7 | × 9.0 | not measured |
 
 These figures cover only the cases listed; they are not a general claim of
-superiority over GeomLoss on every workload or card. The full tables and the
-protocol are on the [Performance](docs/performance.md) page.
+superiority over GeomLoss on every workload or machine. The full tables and
+the protocol are on the [Performance](docs/performance.md) page.
 
 ## About the name and logo
 

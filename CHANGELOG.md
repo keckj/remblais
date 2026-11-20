@@ -5,6 +5,16 @@ All notable changes to remblais. Versions follow
 code, a minor version only adds features. Each section below is also the text
 of the corresponding [GitHub release](https://github.com/keckj/remblais/releases).
 
+## Unreleased
+
+### Added
+
+- `tools/bench_geomloss.py`: benchmark against GeomLoss on a GPU or on the
+  CPU, one fresh process and one fresh PyKeOps build folder per measurement.
+- Documentation: measurements on an RTX 5090 (× 1.15 to × 9 against GeomLoss)
+  and on 2 × AMD EPYC 9654 (× 1.3 to × 22); speed-ups are now given as
+  GeomLoss time / remblais time.
+
 ## 2.1.0 (2026-11-20)
 
 remblais now runs fast on CPUs, through the new native CPU backend of kernox
