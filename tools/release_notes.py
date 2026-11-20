@@ -5,7 +5,8 @@
 Prints the body of the ``## 2.1.0 (date)`` section of CHANGELOG.md, followed
 by a link comparing the tag with the previous version of the changelog.
 Fails (exit status 1) when the section is missing or empty, so that a release
-cannot be published without its changelog.
+cannot be published without its changelog. Hard-wrapped lines are joined:
+GitHub renders each line break of a release body as a break.
 """
 
 from __future__ import annotations
@@ -24,6 +25,27 @@ def sections(text: str) -> list[tuple[str, str]]:
             for k, m in enumerate(marks)]
 
 
+BLOCK = re.compile(r"^\s*([-*+] |\d+\. |#|\||```|>)")
+
+
+def unwrap(text: str) -> str:
+    """Join the continuation lines of paragraphs and list items."""
+    out: list[str] = []
+    fence = False
+    for line in text.split("\n"):
+        if line.lstrip().startswith("```"):
+            fence = not fence
+            out.append(line)
+            continue
+        joinable = (not fence and out and line.strip() and not BLOCK.match(line)
+                    and out[-1].strip() and not out[-1].lstrip().startswith(("#", "|", "```")))
+        if joinable:
+            out[-1] = out[-1].rstrip() + " " + line.strip()
+        else:
+            out.append(line)
+    return "\n".join(out)
+
+
 def notes(changelog: str, tag: str, repo: str) -> str:
     version = tag.removeprefix("v")
     secs = sections(changelog)
@@ -38,7 +60,7 @@ def notes(changelog: str, tag: str, repo: str) -> str:
         link = f"https://github.com/{repo}/compare/v{versions[k + 1]}...{tag}"
     else:
         link = f"https://github.com/{repo}/commits/{tag}"
-    return f"{body}\n\n**Full changelog**: {link}\n"
+    return f"{unwrap(body)}\n\n**Full changelog**: {link}\n"
 
 
 if __name__ == "__main__":
