@@ -106,9 +106,9 @@ multiscale D = 3 at N = 10⁶ (× 0.98) and faster everywhere else.
 ### CPU: 2 × AMD EPYC 9654
 
 192 cores, 192 threads pinned (`OMP_PROC_BIND=close OMP_PLACES=cores`),
-PyTorch 2.15.0+cpu, kernox from its main branch with its CPU backend (it
-includes a fix of the next kernox release: with kernox 1.1.0, the N = 10³
-cases are about three times slower at 192 threads); GeomLoss runs on the CPU
+PyTorch 2.15.0+cpu, kernox 1.1.1 with its CPU backend (with kernox 1.1.0, the
+N = 10³ cases are about three times slower at 192 threads: use 1.1.1 or later
+on large nodes); GeomLoss runs on the CPU
 backend of PyKeOps 2.3, which compiles without fast math: the IEEE column is
 the like-for-like comparison.
 
