@@ -118,7 +118,7 @@ def sinkhorn_loop_paired(cost, a_log, b_log, x, y, eps_list, rho, dot=False, deb
     grad_state = torch.is_grad_enabled()
     torch.set_grad_enabled(False)
     try:
-        if USE_CUDA_GRAPHS and dev.type == "cuda":
+        if USE_CUDA_GRAPHS and dev.type == "cuda" and not _kp.distributed_enabled():
             P_A, P_B = _graph_iterations(cost, ws, consts)
         else:
             P_A, P_B = _run_iterations(cost, ws, consts)

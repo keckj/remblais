@@ -5,10 +5,27 @@ All notable changes to remblais. Versions follow
 code, a minor version only adds features. Each section below is also the text
 of the corresponding [GitHub release](https://github.com/keckj/remblais/releases).
 
-## Unreleased
+## 2.2.0 (2026-11-21)
+
+A large loss can now run on several GPUs or nodes:
+`SamplesLoss(..., distributed=True)` splits its kernox reductions across the
+processes of a `torch.distributed` group, with a step-by-step guide.
 
 ### Added
 
+- **`SamplesLoss(..., distributed=None)`.** With `distributed=True`, the
+  kernox reductions of the `online` and `multiscale` backends are split across
+  the processes of the default `torch.distributed` group (or of the group
+  passed instead of `True`): several GPUs with NCCL, several CPU nodes with
+  Gloo. Every process passes the same point clouds and receives the same value
+  and gradients. Requires kernox 1.2.0 or later. See the guide
+  [Several GPUs or nodes](https://keckj.github.io/remblais/guides/distributed/).
+- `tools/bench_distributed.py`: strong scaling of the Sinkhorn divergence
+  across processes. Measured on 8 AMD MI210 (2 nodes): × 8.3 with `online`
+  on 10⁶ points, × 7.4 with `multiscale` on 10⁷ points; × 7.9 on 8 CPU nodes
+  (2 × EPYC 9654) with `multiscale` on 10⁷ points. See
+  [Scaling](https://keckj.github.io/remblais/guides/distributed/#scaling).
+- README: a how-to for several GPUs or nodes.
 - `tools/bench_geomloss.py`: benchmark against GeomLoss on a GPU or on the
   CPU, one fresh process and one fresh PyKeOps build folder per measurement.
 - Documentation: measurements on an RTX 5090 (× 1.15 to × 9 against GeomLoss)

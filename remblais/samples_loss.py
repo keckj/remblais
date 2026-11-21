@@ -43,6 +43,14 @@ for _name in ("energy", "gaussian", "laplacian"):
 BACKENDS = ("auto", "tensorized", "online", "multiscale")
 
 
+def _is_process_group(group):
+    try:
+        import torch.distributed as dist
+    except ImportError:
+        return False
+    return dist.is_available() and isinstance(group, dist.ProcessGroup)
+
+
 class SamplesLoss(Module):
     """Loss between two weighted point clouds, compatible with GeomLoss 0.3.1.
 
@@ -94,11 +102,18 @@ class SamplesLoss(Module):
         GPUs in FP32 (as PyKeOps does under GeomLoss), kept elsewhere. ``False``:
         kept everywhere. ``True``: ask kernox to flush them (no effect in FP64 on
         NVIDIA GPUs, refused by the backends that do not offer it).
+    :param distributed: specific to remblais. ``None`` (default): local
+        reductions. ``True``: the kernox reductions of the ``online`` and
+        ``multiscale`` backends are split across the processes of the default
+        ``torch.distributed`` group (each process computes a share of the rows,
+        see ``kernox.distributed``); a process group: across that group. Every
+        process passes the same inputs and receives the same result, with
+        gradients. The ``tensorized`` backend stays local.
     """
 
     def __init__(self, loss="sinkhorn", p=2, blur=0.05, reach=None, diameter=None, scaling=0.5, truncate=5,
                  cost=None, kernel=None, cluster_scale=None, debias=True, potentials=False, verbose=False,
-                 backend="auto", fast_math=None, flush_denormals=None):
+                 backend="auto", fast_math=None, flush_denormals=None, distributed=None):
         super().__init__()
         if loss not in routines or loss == "hausdorff_kernel":
             raise ValueError(f"unknown loss {loss!r}: expected sinkhorn, hausdorff, energy, gaussian or laplacian")
@@ -124,6 +139,14 @@ class SamplesLoss(Module):
         if flush_denormals not in (None, True, False):
             raise ValueError(f"flush_denormals: expected None, True or False, got {flush_denormals!r}")
         self.flush_denormals = flush_denormals
+        if distributed not in (None, False, True) and not _is_process_group(distributed):
+            raise ValueError(f"distributed: expected None, True or a torch.distributed process group, got {distributed!r}")
+        if distributed not in (None, False):
+            try:
+                import kernox.distributed  # noqa: F401
+            except ImportError as e:
+                raise ImportError("SamplesLoss(distributed=...) needs kernox 1.2 or later (kernox.distributed)") from e
+        self.distributed = distributed
 
     def select_backend(self, B, N, M, D, labelled):
         """Rule used by ``backend="auto"`` (the one of GeomLoss v0.3.1)."""
@@ -169,7 +192,8 @@ class SamplesLoss(Module):
         fd = self.flush_denormals
         if fd is None:
             fd = _kp.default_flush_denormals(x.device, x.dtype)
-        with _kp.fast_math(fm), _kp.flush_denormals(fd):
+        group = None if self.distributed in (None, False) else (None if self.distributed is True else self.distributed,)
+        with _kp.fast_math(fm), _kp.flush_denormals(fd), _kp.distributed(group):
             values = routines[loss][backend](
                 α, x, β, y, p=self.p, blur=self.blur, reach=self.reach, diameter=self.diameter,
                 scaling=self.scaling, truncate=self.truncate, cost=self.cost, kernel=self.kernel,

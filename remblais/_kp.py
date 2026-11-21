@@ -265,10 +265,36 @@ def _contig(t):
 VALIDATE_RANGES = os.environ.get("REMBLAIS_VALIDATE_RANGES", "0") == "1"
 
 
+# torch.distributed group sharing the reductions (kernox.distributed, output rows
+# split across the ranks) for the calls made in this context; set by SamplesLoss.
+# None: local calls; otherwise a 1-tuple holding the group (None = world group).
+_GROUP = contextvars.ContextVar("remblais_distributed", default=None)
+
+
+@contextlib.contextmanager
+def distributed(group):
+    """Context manager: kernox reductions are split across ``group`` (a 1-tuple), or local (None)."""
+    token = _GROUP.set(group)
+    try:
+        yield
+    finally:
+        _GROUP.reset(token)
+
+
+def distributed_enabled():
+    return _GROUP.get() is not None
+
+
 def _call(run, ranges, **kw):
     if ranges is not None:
         run = run.with_ranges(ranges, validate=VALIDATE_RANGES)
-    return run(**{k: (_contig(v) if torch.is_tensor(v) else v) for k, v in kw.items()})
+    kw = {k: (_contig(v) if torch.is_tensor(v) else v) for k, v in kw.items()}
+    group = _GROUP.get()
+    if group is not None:
+        import kernox.distributed as kd
+
+        return kd.reduce(run, group=group[0], split="output", **kw)
+    return run(**kw)
 
 
 def lse(cost, x, y, h, inv_eps, ranges=None):

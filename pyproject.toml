@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "remblais"
 dynamic = ["version"]  # remblais.__version__
-description = "Sinkhorn divergences, kernel MMD and optimal transport on NVIDIA, AMD and Intel GPUs (CUDA, HIP, SYCL) and x86-64 CPUs: a drop-in GeomLoss replacement built on kernox"
+description = "Sinkhorn divergences, kernel MMD and optimal transport on NVIDIA, AMD and Intel GPUs (CUDA, HIP, SYCL) and x86-64 CPUs, on one device or across GPUs and nodes: a drop-in GeomLoss replacement built on kernox"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 license-files = ["LICENSE-MIT", "LICENSE-APACHE", "THIRD_PARTY.md"]
@@ -23,7 +23,7 @@ classifiers = [
 # kernox: the plain package is enough for the CPU; install it with the extra of
 # your GPU (kernox[cuda], kernox[rocm], kernox[xpu]) for the GPU backends.
 # torch: installed from the platform-specific index (CUDA, ROCm, XPU), as for kernox.
-dependencies = ["numpy", "scipy", "torch", "kernox>=1.1.0"]
+dependencies = ["numpy", "scipy", "torch", "kernox>=1.2.0"]
 
 [project.optional-dependencies]
 # geomloss 0.3.1 is the reference implementation the tests compare against.

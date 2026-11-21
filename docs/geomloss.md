@@ -193,6 +193,9 @@ purpose, usually because GeomLoss has a bug there.
   batched inputs `(B, N, D)`; GeomLoss raises `ValueError`.
 - **`fast_math`** and **`flush_denormals`.** New `SamplesLoss` arguments,
   described below.
+- **`distributed`.** New `SamplesLoss` argument: the softmins are split
+  across the processes of a `torch.distributed` group. See
+  [Several GPUs or nodes](guides/distributed.md).
 
 ## Fast math
 

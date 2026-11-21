@@ -59,6 +59,7 @@ nav:
       - Hausdorff divergence: guides/hausdorff.md
       - Images and volumes: guides/images.md
       - The ot API: guides/ot.md
+      - Several GPUs or nodes: guides/distributed.md
   - Coming from GeomLoss: geomloss.md
   - Performance: performance.md
   - API reference: reference.md
