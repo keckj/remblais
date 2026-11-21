@@ -1,11 +1,11 @@
 # Derived from GeomLoss v0.3.1 (geomloss/_legacy/sinkhorn_divergence.py),
 # Copyright (c) 2019 Jean Feydy, MIT License (see THIRD_PARTY.md).
-"""Symmetric Sinkhorn loop with ε-scaling, shared by all the backends.
+r"""Symmetric Sinkhorn loop with $\varepsilon$-scaling, shared by all the backends.
 
 Same algorithm as GeomLoss v0.3.1 (Feydy et al., "Interpolating between
 Optimal Transport and MMD using Sinkhorn Divergences", AISTATS 2019, and
-J. Feydy's PhD thesis, 2020): damped symmetric updates, ε decreasing from
-diameter^p to blur^p, differentiable final extrapolation (envelope theorem),
+J. Feydy's PhD thesis, 2020): damped symmetric updates, $\varepsilon$ decreasing from
+$\texttt{diameter}^p$ to $\texttt{blur}^p$, differentiable final extrapolation (envelope theorem),
 debiased and unbalanced formulas.
 
 Deliberate difference: the caller's "grad enabled" state is restored at the
@@ -20,25 +20,25 @@ from .utils import max_diameter, scal
 
 
 def dampening(eps, rho):
-    """Dampening factor 1/(1 + ε/ρ) of unbalanced transport."""
+    r"""Dampening factor $1/(1 + \varepsilon/\rho)$ of unbalanced transport."""
     return 1 if rho is None else 1 / (1 + eps / rho)
 
 
 def log_weights(a):
-    """log a, with log 0 replaced by −100000 (zero masses)."""
+    r"""$\log a$, with $\log 0$ replaced by $-100000$ (zero masses)."""
     a_log = a.log()
     a_log[a <= 0] = -100000
     return a_log
 
 
 class UnbalancedWeight(torch.nn.Module):
-    """(ρ + ε/2)·x in the forward pass, (ρ + ε)·g in the backward pass.
+    r"""$(\rho + \varepsilon/2) \cdot x$ in the forward pass, $(\rho + \varepsilon) \cdot g$ in the backward pass.
 
     This is the correction intended by GeomLoss: with potentials approximated at
-    temperature ε, it makes the gradient of the unbalanced divergence exact at
+    temperature $\varepsilon$, it makes the gradient of the unbalanced divergence exact at
     convergence. GeomLoss v0.3.1 declares this ``backward`` on an ``nn.Module``,
     where Torch never calls it: its effective gradient is the one of
-    (ρ + ε/2)·x, wrong by about ε/(2ρ). remblais applies the correction (a
+    $(\rho + \varepsilon/2) \cdot x$, wrong by about $\varepsilon/(2\rho)$. remblais applies the correction (a
     deliberate difference, see "Coming from GeomLoss" in the documentation).
     """
 
@@ -62,14 +62,14 @@ class _UnbalancedWeightFn(torch.autograd.Function):
 
 
 def epsilon_schedule(p, diameter, blur, scaling):
-    """[diameter^p] + geometric sequence of ratio scaling^p + [blur^p] (GeomLoss)."""
+    r"""[$\texttt{diameter}^p$] + geometric sequence of ratio $\texttt{scaling}^p$ + [$\texttt{blur}^p$] (GeomLoss)."""
     return ([diameter**p]
             + [np.exp(e) for e in np.arange(p * np.log(diameter), p * np.log(blur), p * np.log(scaling))]
             + [blur**p])
 
 
 def scaling_parameters(x, y, p, blur, reach, diameter, scaling):
-    """(diameter, ε, list of the ε values, ρ)."""
+    r"""(diameter, $\varepsilon$, list of the $\varepsilon$ values, $\rho$)."""
     if diameter is None:
         D = x.shape[-1]
         diameter = max_diameter(x.reshape(-1, D), y.reshape(-1, D))
@@ -99,9 +99,9 @@ def sinkhorn_cost(eps, rho, a, b, f_aa, g_bb, g_ab, f_ba, batch=False, debias=Tr
 def sinkhorn_loop(softmin, a_logs, b_logs, C_xxs, C_yys, C_xys, C_yxs, eps_list, rho,
                   jumps=(), kernel_truncation=None, truncate=5, cost=None, extrapolate=None,
                   debias=True, last_extrapolation=True):
-    """Symmetric Sinkhorn iterations; returns (f_aa, g_bb, g_ab, f_ba).
+    r"""Symmetric Sinkhorn iterations; returns (f_aa, g_bb, g_ab, f_ba).
 
-    ``softmin(eps, C, h)`` computes ``−ε log Σ_j exp(h_j − C_ij/ε)``. The lists
+    ``softmin(eps, C, h)`` computes $-\varepsilon \log \sum_j \exp(h_j - C_{ij}/\varepsilon)$. The lists
     (``a_logs``, ``C_xys``, ...) describe the coarse to fine levels of the
     multiscale scheme.
     """

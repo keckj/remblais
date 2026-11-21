@@ -1,10 +1,10 @@
 # Derived from GeomLoss v0.3.1 (geomloss/_legacy/sinkhorn_images.py, utils.py),
 # Copyright (c) 2019 Jean Feydy, MIT License (see THIRD_PARTY.md).
-"""Sinkhorn divergence between images and volumes (regular grids), multiscale.
+r"""Sinkhorn divergence between images and volumes (regular grids), multiscale.
 
 The Gibbs kernel of a separable cost on a grid factorizes along the axes: each
 softmin is a sequence of 1D LOGSUMEXP reductions (one per axis), run by kernox
-as batched reductions (one N×N reduction per line of the image).
+as batched reductions (one $N \times N$ reduction per line of the image).
 """
 
 import numpy as np
@@ -89,9 +89,9 @@ def _separable(kind, h, p, s):
 
 
 def softmin_grid(eps, C_xy, h_y):
-    """Separable soft C-transform on the grid [0, 1)^D of step 1/N.
+    r"""Separable soft C-transform on the grid $[0, 1)^D$ of step $1/N$.
 
-    ``C_xy`` is the exponent p: cost |x − y|²/2 (p = 2) or Σ_d |x_d − y_d| (p = 1,
+    ``C_xy`` is the exponent $p$: cost $|x - y|^2/2$ ($p = 2$) or $\sum_d |x_d - y_d|$ ($p = 1$,
     the L1 distance, the only separable version; it is the one of GeomLoss).
     """
     p = C_xy
@@ -102,10 +102,10 @@ def softmin_grid(eps, C_xy, h_y):
 
 
 def C_transform(G, tau=1, p=2):
-    """The "hard" C-transform F(x_i) = max_j G(x_j) − |x_i − x_j|^p / (p·τ), with pixels of step 1.
+    r"""The "hard" C-transform $F(x_i) = \max_j G(x_j) - |x_i - x_j|^p / (p \cdot \tau)$, with pixels of step 1.
 
-    G has shape (B, N), (B, N, N) or (B, N, N, N). GeomLoss v0.3.1 raises
-    ``NotImplementedError`` for p = 1 (``if`` instead of ``elif``); remblais
+    $G$ has shape (B, N), (B, N, N) or (B, N, N, N). GeomLoss v0.3.1 raises
+    ``NotImplementedError`` for $p = 1$ (``if`` instead of ``elif``); remblais
     computes both cases.
     """
     D = G.ndim - 1
@@ -136,24 +136,24 @@ def kernel_truncation(C_xy, C_yx, C_xy_fine, C_yx_fine, f_ba, g_ab, eps, truncat
 
 def sinkhorn_divergence(a, b, p=2, blur=None, reach=None, axes=None, scaling=0.5, cost=None, debias=True,
                         potentials=False, verbose=False, **kwargs):
-    """Sinkhorn divergence between densities on a regular grid, multiscale.
+    r"""Sinkhorn divergence between densities on a regular grid, multiscale.
 
     Exported as ``remblais.sinkhorn_divergence``. The pixels sit on the grid
-    [0, 1)ᴰ with a step of 1/N.
+    $[0, 1)^D$ with a step of $1/N$.
 
     :param a: source densities, (B, K, N, N) for images or (B, K, N, N, N) for
-        volumes; N must be a power of 2.
+        volumes; $N$ must be a power of 2.
     :param b: target densities, same shape as ``a``.
-    :param p: exponent of the cost: |x − y|²/2 for p = 2, the L1 distance for
-        p = 1.
-    :param blur: length scale σ, ε = blurᵖ; one pixel (1/N) when ``None``.
+    :param p: exponent of the cost: $|x - y|^2/2$ for $p = 2$, the L1 distance for
+        $p = 1$.
+    :param blur: length scale $\sigma$, $\varepsilon = \texttt{blur}^p$; one pixel ($1/N$) when ``None``.
     :param reach: ``None`` for balanced transport, or a length scale for
         unbalanced transport.
-    :param scaling: ratio of the ε-scaling, in [0.5, 1).
+    :param scaling: ratio of the $\varepsilon$-scaling, in $[0.5, 1)$.
     :param debias: subtract the self-transport terms.
-    :param potentials: return the dual potentials (F, G) instead of the value.
-    :param verbose: print the pyramid and the ε-scaling schedule.
-    :return: a (B,) tensor, summed over the K channels, or (F, G).
+    :param potentials: return the dual potentials $(F, G)$ instead of the value.
+    :param verbose: print the pyramid and the $\varepsilon$-scaling schedule.
+    :return: a (B,) tensor, summed over the $K$ channels, or $(F, G)$.
     """
     if blur is None:
         blur = 1 / a.shape[-1]

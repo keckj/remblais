@@ -1,17 +1,23 @@
-"""Weighted Hausdorff divergence (``loss="hausdorff"`` without a kernel).
+r"""Weighted Hausdorff divergence (``loss="hausdorff"`` without a kernel).
 
-GeomLoss v0.3.1 documents ``"hausdorff"`` ("interpolates between ICP, blur = 0,
-and a kernel distance, blur = +∞") but routes this name to the kernel norms:
+GeomLoss v0.3.1 documents ``"hausdorff"`` ("interpolates between ICP, $\texttt{blur} = 0$,
+and a kernel distance, $\texttt{blur} = +\infty$") but routes this name to the kernel norms:
 without a ``kernel`` argument, the call raises ``KeyError`` there. remblais
 keeps this routing when ``kernel`` is given, and otherwise implements the
 definition of Feydy et al. (AISTATS 2019, §2):
 
-    a = softmin_ε(α), b = softmin_ε(β),  softmin_ε(μ)(z) = −ε log ∫ exp(−C(z, w)/ε) dμ(w)
-    H_ε(α, β) = ½ ⟨α, b − a⟩ + ½ ⟨β, a − b⟩,   ε = blur^p.
+$$
+a = \operatorname{softmin}_\varepsilon(\alpha), \quad b = \operatorname{softmin}_\varepsilon(\beta), \quad
+\operatorname{softmin}_\varepsilon(\mu)(z) = -\varepsilon \log \int \exp(-C(z, w)/\varepsilon)\, d\mu(w)
+$$
 
-As ε → 0, H_ε tends to ½ ⟨α, d(·, supp β)⟩ + ½ ⟨β, d(·, supp α)⟩ (symmetric
-ICP). The returned potentials are (b − a on x, a − b on y), so that
-H = ½(⟨α, F⟩ + ⟨β, G⟩). The gradient is exact (no extrapolation).
+$$
+H_\varepsilon(\alpha, \beta) = \frac{1}{2} \langle \alpha, b - a \rangle + \frac{1}{2} \langle \beta, a - b \rangle, \quad \varepsilon = \texttt{blur}^p.
+$$
+
+As $\varepsilon \to 0$, $H_\varepsilon$ tends to $\frac{1}{2} \langle \alpha, d(\cdot, \operatorname{supp} \beta) \rangle + \frac{1}{2} \langle \beta, d(\cdot, \operatorname{supp} \alpha) \rangle$ (symmetric
+ICP). The returned potentials are ($b - a$ on $x$, $a - b$ on $y$), so that
+$H = \frac{1}{2}(\langle \alpha, F \rangle + \langle \beta, G \rangle)$. The gradient is exact (no extrapolation).
 """
 
 from . import _kp

@@ -1,13 +1,13 @@
 # Kernel MMD
 
 Kernel norms, also known as maximum mean discrepancies (MMD), compare two
-measures through a kernel k:
+measures through a kernel $k$:
 
-```
-Loss(α, β) = ½⟨α, k⋆α⟩ + ½⟨β, k⋆β⟩ − ⟨α, k⋆β⟩
-```
+$$
+\text{Loss}(\alpha, \beta) = \frac{1}{2}\langle \alpha, k \star \alpha \rangle + \frac{1}{2}\langle \beta, k \star \beta \rangle - \langle \alpha, k \star \beta \rangle
+$$
 
-They need a single pass over the N × M pairs (no iterations), which makes
+They need a single pass over the $N \times M$ pairs (no iterations), which makes
 them the cheapest losses of remblais. Their weakness is the gradient: far
 from the target, a Gaussian kernel barely pulls the points.
 
@@ -27,9 +27,9 @@ for name in ("gaussian", "laplacian", "energy"):
     print(name, loss(x, y).item())
 ```
 
-- `"gaussian"`: k(x, y) = exp(−‖x − y‖² / 2σ²), with σ = `blur`;
-- `"laplacian"`: k(x, y) = exp(−‖x − y‖ / σ);
-- `"energy"`: k(x, y) = −‖x − y‖, the energy distance. It has no scale, so
+- `"gaussian"`: $k(x, y) = \exp(-\|x - y\|^2 / 2\sigma^2)$, with $\sigma = \texttt{blur}$;
+- `"laplacian"`: $k(x, y) = \exp(-\|x - y\| / \sigma)$;
+- `"energy"`: $k(x, y) = -\|x - y\|$, the energy distance. It has no scale, so
   `blur` is ignored.
 
 Weights, batches and gradients work as for the Sinkhorn divergence:
@@ -82,7 +82,7 @@ fused reduction for the given blur.
 
 ## Large clouds
 
-`backend="online"` never stores the N × M kernel matrix. In dimension 1 to 3,
+`backend="online"` never stores the $N \times M$ kernel matrix. In dimension 1 to 3,
 `backend="multiscale"` also skips the blocks of pairs farther apart than
 `truncate` times the blur (default 5). Pass `truncate=None` to keep every
 pair.

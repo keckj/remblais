@@ -1,10 +1,10 @@
 # Derived from GeomLoss v0.3.1 (geomloss/_legacy/sinkhorn_samples.py),
 # Copyright (c) 2019 Jean Feydy, MIT License (see THIRD_PARTY.md).
-"""Sinkhorn divergences between point clouds: tensorized, online and multiscale backends.
+r"""Sinkhorn divergences between point clouds: tensorized, online and multiscale backends.
 
 - ``tensorized``: dense Torch cost matrices (quadratic memory), like GeomLoss;
 - ``online``: one fused kernox LOGSUMEXP reduction per softmin, a plan
-  compiled once (ε as a parameter), native batches, batched custom costs;
+  compiled once ($\varepsilon$ as a parameter), native batches, batched custom costs;
 - ``multiscale``: grid clustering, coarse iterations on the centroids, then
   block-sparse truncation (kernox ranges) at the fine level.
 """
@@ -25,7 +25,7 @@ from .sinkhorn_divergence import log_weights, scaling_parameters, sinkhorn_cost,
 # Tensorized
 # ---------------------------------------------------------------------------------
 def softmin_tensorized(eps, C_xy, h_y):
-    """−ε log Σ_j exp(h_j − C_ij/ε) on a dense (B, N, M) matrix."""
+    r"""$-\varepsilon \log \sum_j \exp(h_j - C_{ij}/\varepsilon)$ on a dense (B, N, M) matrix."""
     B = C_xy.shape[0]
     return -eps * (h_y.view(B, 1, -1) - C_xy / eps).logsumexp(2).view(B, -1)
 
@@ -62,7 +62,7 @@ DOT_MIN_DIM = int(os.environ.get("REMBLAIS_DOT_MIN_DIM", 10**9))
 
 
 def sinkhorn_loop_paired(cost, a_log, b_log, x, y, eps_list, rho, dot=False, debias=True):
-    """Debiased Sinkhorn loop with two kernox reductions per iteration (instead of four).
+    r"""Debiased Sinkhorn loop with two kernox reductions per iteration (instead of four).
 
     Same algorithm as `sinkhorn_loop` (same updates, same order, same final
     extrapolation): the softmins that share their j set are fused into one
@@ -78,10 +78,10 @@ def sinkhorn_loop_paired(cost, a_log, b_log, x, y, eps_list, rho, dot=False, deb
     ``debias=False``: only (f_ba, g_ab); A = rows x, j = y; B = rows y, j = x
     (two reductions per iteration, like GeomLoss).
 
-    ``dot=True`` (½‖x − y‖² cost only): after centering, ½‖x − y‖² =
-    ½‖x‖² + ½‖y‖² − ⟨x, y⟩; the norms go into the j scores and the output, and
-    the pair only computes ⟨x_i, y_j⟩ (D FMAs instead of D subtractions + D
-    FMAs). Rounding error in u·‖x‖‖y‖/ε instead of u·‖x − y‖²/ε: reserved for
+    ``dot=True`` ($\frac{1}{2}\|x - y\|^2$ cost only): after centering,
+    $\frac{1}{2}\|x - y\|^2 = \frac{1}{2}\|x\|^2 + \frac{1}{2}\|y\|^2 - \langle x, y \rangle$; the norms go into the j scores and the output, and
+    the pair only computes $\langle x_i, y_j \rangle$ ($D$ FMAs instead of $D$ subtractions + $D$
+    FMAs). Rounding error in $u \cdot \|x\|\|y\|/\varepsilon$ instead of $u \cdot \|x - y\|^2/\varepsilon$: reserved for
     high dimensions, where both are of the same order.
     """
     from .sinkhorn_divergence import dampening
@@ -304,7 +304,7 @@ def softmin_multiscale(eps, C_xy, f_y, cost=None):
 
 
 def kernel_truncation(C_xy, C_yx, C_xy_, C_yx_, f_ba, g_ab, eps, truncate=None, cost=None, verbose=False):
-    """Kept fine blocks: (ci, cj) such that f_ci + g_cj > C(ci, cj) − truncate·ε (on the centroids)."""
+    r"""Kept fine blocks: $(c_i, c_j)$ such that $f_{c_i} + g_{c_j} > C(c_i, c_j) - \texttt{truncate} \cdot \varepsilon$ (on the centroids)."""
     if truncate is None:
         return C_xy_, C_yx_
     x, yd, clusters_x, clusters_y, _ = C_xy

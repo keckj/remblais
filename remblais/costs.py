@@ -1,4 +1,4 @@
-"""Transport costs: defaults for p = 1, 2, and symbolic kernox costs.
+"""Transport costs: defaults for $p = 1, 2$, and symbolic kernox costs.
 
 A custom cost can be given:
 

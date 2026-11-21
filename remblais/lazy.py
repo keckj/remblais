@@ -1,4 +1,4 @@
-"""Minimal ``LazyTensor`` on kernox (a subset of ``pykeops.torch.LazyTensor``).
+r"""Minimal ``LazyTensor`` on kernox (a subset of ``pykeops.torch.LazyTensor``).
 
 It serves the ``remblais.ot`` API (a port of ``geomloss.ot``), written for
 KeOps, and GeomLoss-style custom kernels. KeOps conventions:
@@ -6,10 +6,10 @@ KeOps, and GeomLoss-style custom kernels. KeOps conventions:
 - ``LazyTensor(t)`` with ``t`` of shape ``(*B, N, 1, D)``: an i variable;
   ``(*B, 1, M, D)``: a j variable; ``(*B, 1, 1, D)``: a parameter;
 - a Python number becomes a **parameter** of the plan (its value is not part
-  of the compilation key: ``C / eps`` does not recompile when ε changes);
+  of the compilation key: ``C / eps`` does not recompile when $\varepsilon$ changes);
 - ``shape`` is ``(*B, N, M)`` for a scalar formula, ``(*B, N, M, D)`` otherwise;
 - reductions ``sum``, ``logsumexp``, ``min``, ``max`` over ``dim`` = the i axis
-  (−3 + ...) or j, returning ``(*B, N, D)`` (or ``(*B, M, D)``); ``K @ v``
+  (-3 + ...) or j, returning ``(*B, N, D)`` (or ``(*B, M, D)``); ``K @ v``
   (v dense (M, V)); ``K.T`` swaps i and j.
 
 NumPy inputs are accepted (computed with Torch on the CPU, NumPy output).
@@ -162,7 +162,7 @@ class LazyTensor:
         return self._unary("sqnorm2", 1)
 
     def norm2(self):
-        """‖·‖ with a zero gradient at 0 (like KeOps ``Norm2``)."""
+        r"""$\|\cdot\|$ with a zero gradient at 0 (like KeOps ``Norm2``)."""
         return self._unary("norm2", 1)
 
     def sqdist(self, other):
@@ -219,7 +219,7 @@ class LazyTensor:
         return self._reduce("argmax", self._axis(axis if dim is None else dim))
 
     def __matmul__(self, v):
-        """Σ_j K_ij v_j, with v dense (M,) or (M, V) (or (*B, M, V))."""
+        r"""$\sum_j K_{ij} v_j$, with $v$ dense (M,) or (M, V) (or (*B, M, V))."""
         numpy = isinstance(v, np.ndarray)
         vt = torch.from_numpy(v) if numpy else v
         squeeze = vt.dim() == 1

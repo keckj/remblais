@@ -25,12 +25,12 @@ b = torch.full((1_500,), 1 / 1_500, device=device)
 
 A loss accepts three calling conventions:
 
-- `loss(x, y)`: uniform weights, 1/N and 1/M;
+- `loss(x, y)`: uniform weights, $1/N$ and $1/M$;
 - `loss(a, x, b, y)`: explicit weights;
 - `loss(l_x, a, x, l_y, b, y)`: explicit weights and explicit cluster labels,
   for the `multiscale` backend.
 
-A leading batch dimension computes B independent losses at once: `x` of shape
+A leading batch dimension computes $B$ independent losses at once: `x` of shape
 `(B, N, D)`, `a` of shape `(B, N)`, and the result has shape `(B,)`.
 
 ```python
@@ -61,11 +61,11 @@ The `loss` argument of `SamplesLoss` picks the family:
 
 ## Costs
 
-The ground cost `C(x, y)` says how much it costs to move a unit of mass from
-`x` to `y`. With the default `cost=None`, it depends on `p`:
+The ground cost $C(x, y)$ says how much it costs to move a unit of mass from
+$x$ to $y$. With the default `cost=None`, it depends on `p`:
 
-- `p=2` (the default): `C(x, y) = ½‖x − y‖²`;
-- `p=1`: `C(x, y) = ‖x − y‖`.
+- `p=2` (the default): $C(x, y) = \frac{1}{2}\|x - y\|^2$;
+- `p=1`: $C(x, y) = \|x - y\|$.
 
 A custom cost is a Python function of symbolic kernox formulas: it receives
 `x`, indexed by `i`, and `y`, indexed by `j`, and returns a scalar formula.
@@ -112,17 +112,17 @@ formula with kernox, as above.
 These parameters have a geometric meaning: they are lengths, in the units of
 your data.
 
-- **`blur`** (σ) is the scale below which details are ignored. Entropic
-  regularization uses ε = blurᵖ, with the cost C above. A small blur gives a sharper, more faithful
+- **`blur`** ($\sigma$) is the scale below which details are ignored. Entropic
+  regularization uses $\varepsilon = \texttt{blur}^p$, with the cost $C$ above. A small blur gives a sharper, more faithful
   transport, at the price of more iterations. A typical value is a small
   fraction of the size of your data, such as 0.01 to 0.05 for data in the
   unit cube. For kernel losses, `blur` is the width of the kernel.
-- **`reach`** (ρ = reachᵖ) enables **unbalanced** transport. With the default
+- **`reach`** ($\rho = \texttt{reach}^p$) enables **unbalanced** transport. With the default
   `reach=None`, all the mass must be transported, and the two measures must
   have the same total mass. With a finite reach, mass may also be created or
   destroyed, at a cost: points farther apart than about `reach` are not
   matched. It makes the loss robust to outliers.
-- **`scaling`** controls ε-scaling, the annealing strategy of the Sinkhorn
+- **`scaling`** controls $\varepsilon$-scaling, the annealing strategy of the Sinkhorn
   loop. The loop starts at a blur as large as the data (the `diameter`,
   estimated if not given) and multiplies it by `scaling` at each iteration,
   down to `blur`. Values close to 1 are more accurate and slower; 0.5 is fast
@@ -136,20 +136,20 @@ print(precise(a, x, b, y), robust(a, x, b, y))
 
 `debias=True` (the default) subtracts the self-transport terms, so that the
 divergence of a measure with itself is zero. `potentials=True` returns the
-dual potentials (F, G) instead of the value; see the
+dual potentials $(F, G)$ instead of the value; see the
 [Sinkhorn guide](guides/sinkhorn.md#dual-potentials).
 
 ## Backends
 
-The `backend` argument chooses how the N × M interactions are computed. All
+The `backend` argument chooses how the $N \times M$ interactions are computed. All
 backends compute the same quantity; they differ in speed and memory.
 
-- **`tensorized`**: dense PyTorch matrices of size N × M. Fast for small
+- **`tensorized`**: dense PyTorch matrices of size $N \times M$. Fast for small
   problems, but the memory grows quadratically. It is pure PyTorch, like the
   same backend of GeomLoss.
 - **`online`**: each softmin is a single fused kernox reduction, computed
-  without storing the N × M matrix: memory stays linear. The reduction is
-  compiled once and reused for every value of ε, every call and every batch.
+  without storing the $N \times M$ matrix: memory stays linear. The reduction is
+  compiled once and reused for every value of $\varepsilon$, every call and every batch.
 - **`multiscale`**: for Sinkhorn divergences in dimension 1 to 3. Points are
   clustered on a grid; the first iterations run on the cluster centroids,
   then the final ones skip the blocks of pairs that are too far apart to
@@ -159,8 +159,8 @@ backends compute the same quantity; they differ in speed and memory.
   cells.
 
 The default, `backend="auto"`, uses the rule of GeomLoss: `tensorized` when
-N · M ≤ 5000², `multiscale` for Sinkhorn with `p=2` in dimension 3 or less
-when N · M > 10⁴ · 10⁴, and `online` otherwise.
+$N \cdot M \le 5000^2$, `multiscale` for Sinkhorn with `p=2` in dimension 3 or less
+when $N \cdot M > 10^4 \cdot 10^4$, and `online` otherwise.
 
 ![How backend="auto" chooses between tensorized, multiscale and online](images/backends.svg)
 

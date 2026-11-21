@@ -64,7 +64,7 @@ y = torch.rand(3_000, 3, device=device) + 0.5    # M points, shifted
 ```
 
 `SamplesLoss` builds a loss function. Here, the debiased Sinkhorn divergence
-for the cost ½‖x − y‖² (`p=2`), with a blur of 0.05: details smaller than the
+for the cost $\frac{1}{2}\|x - y\|^2$ (`p=2`), with a blur of 0.05: details smaller than the
 blur are ignored.
 
 ```python
@@ -73,9 +73,9 @@ L = loss(x, y)
 print(L)        # a scalar tensor, close to ½‖0.5 · (1, 1, 1)‖² = 0.375
 ```
 
-Without weights, each point carries the same mass, 1/N in `x` and 1/M in `y`.
+Without weights, each point carries the same mass, $1/N$ in `x` and $1/M$ in `y`.
 To give your own weights, pass four arguments: `loss(a, x, b, y)`, where `a`
-and `b` are nonnegative vectors of sizes N and M that each sum to 1.
+and `b` are nonnegative vectors of sizes $N$ and $M$ that each sum to 1.
 
 ```python
 a = torch.rand(2_000, device=device)
@@ -110,7 +110,7 @@ call of each formula compiles it, which takes a few seconds; later calls,
 including in later sessions, reuse the compiled code. Small problems use the
 dense PyTorch implementation (`backend="tensorized"`), as on GPUs.
 
-Sinkhorn divergence, N = M = 10⁴ points in 3D, float32, forward and backward,
+Sinkhorn divergence, $N = M = 10^4$ points in 3D, float32, forward and backward,
 8 threads of a Xeon:
 
 | Backend | Time |
@@ -124,7 +124,7 @@ falls back to the kernox *oracle*, a slow blockwise PyTorch reference. Set
 `REMBLAIS_CPU_BACKEND=oracle` or `REMBLAIS_CPU_BACKEND=cpu` to force the
 choice. Every example of this documentation runs on the CPU in the test suite.
 
-On the CPU, subnormal numbers (below about 10⁻³⁸ in FP32) are flushed to zero
+On the CPU, subnormal numbers (below about $10^{-38}$ in FP32) are flushed to zero
 in the kernox reductions by default: in practice they do not change a loss or
 a gradient, and narrow Gaussian kernels run up to 4.8 times faster on Intel
 CPUs. Pass `flush_denormals=False` to `SamplesLoss` to keep them; see

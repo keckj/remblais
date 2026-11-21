@@ -52,7 +52,7 @@ def _is_process_group(group):
 
 
 class SamplesLoss(Module):
-    """Loss between two weighted point clouds, compatible with GeomLoss 0.3.1.
+    r"""Loss between two weighted point clouds, compatible with GeomLoss 0.3.1.
 
     Create the loss once, then call it like a function: ``loss(x, y)`` (uniform
     weights), ``loss(a, x, b, y)`` (explicit weights) or
@@ -63,18 +63,18 @@ class SamplesLoss(Module):
 
     :param loss: ``"sinkhorn"`` (debiased Sinkhorn divergence), ``"hausdorff"``,
         ``"energy"``, ``"gaussian"`` or ``"laplacian"``.
-    :param p: exponent of the default cost: ‖x − y‖ for p = 1, ½‖x − y‖² for
-        p = 2.
-    :param blur: length scale σ. Entropic regularization uses ε = blurᵖ; for
+    :param p: exponent of the default cost: $\|x - y\|$ for $p = 1$, $\frac{1}{2}\|x - y\|^2$ for
+        $p = 2$.
+    :param blur: length scale $\sigma$. Entropic regularization uses $\varepsilon = \texttt{blur}^p$; for
         kernel losses, it is the width of the kernel.
     :param reach: ``None`` for balanced transport, or a length scale for
-        unbalanced transport (ρ = reachᵖ).
+        unbalanced transport ($\rho = \texttt{reach}^p$).
     :param diameter: an upper bound on the distance between points, where the
-        ε-scaling starts; estimated from the data when ``None``.
-    :param scaling: ratio between successive blur values of the ε-scaling,
+        $\varepsilon$-scaling starts; estimated from the data when ``None``.
+    :param scaling: ratio between successive blur values of the $\varepsilon$-scaling,
         between 0 and 1. Larger is slower and more accurate.
     :param truncate: ``multiscale`` backend: pairs of clusters whose interaction
-        is below exp(−truncate) are skipped; ``None`` keeps every pair.
+        is below $\exp(-\texttt{truncate})$ are skipped; ``None`` keeps every pair.
     :param cost: a custom cost: a function of kernox formulas ``x`` (``Vi``)
         and ``y`` (``Vj``) returning a scalar formula, such as
         ``lambda x, y: (x - y).norm2()`` (``backend="auto"`` then selects
@@ -87,8 +87,8 @@ class SamplesLoss(Module):
         estimated from the data when ``None``.
     :param debias: subtract the self-transport terms, so that the loss of a
         measure with itself is zero.
-    :param potentials: return the dual potentials (F, G) instead of the value.
-    :param verbose: print the clustering and the ε-scaling schedule.
+    :param potentials: return the dual potentials $(F, G)$ instead of the value.
+    :param verbose: print the clustering and the $\varepsilon$-scaling schedule.
     :param backend: ``"auto"``, ``"tensorized"`` (dense PyTorch matrices),
         ``"online"`` (fused kernox reductions) or ``"multiscale"`` (clustering
         and block-sparse kernox reductions, dimension 3 or less).

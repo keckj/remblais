@@ -111,7 +111,7 @@ contiguous span of these rows, and an `all_gather` of the result (one value
 per point) gives every process the full softmin. With the `multiscale`
 backend, the processes share the pairs kept by the block-sparse ranges,
 not the rows, so that each one gets the same amount of work. The rest of
-the computation (clustering, ε-scaling, the final sums) is cheap and runs
+the computation (clustering, $\varepsilon$-scaling, the final sums) is cheap and runs
 on every process.
 
 In the backward pass, the gradients of the point positions and weights are
@@ -125,38 +125,38 @@ rounding only, since the sums are done in another order.
 ## Scaling
 
 Strong scaling measured with `tools/bench_distributed.py`: debiased Sinkhorn
-divergence, p = 2, blur = 0.05, scaling = 0.5, D = 3, FP32, N = M, forward
+divergence, $p = 2$, $\texttt{blur} = 0.05$, $\texttt{scaling} = 0.5$, $D = 3$, FP32, $N = M$, forward
 and backward passes (gradient with respect to `x`), in seconds.
 
 ![Strong scaling of SamplesLoss(distributed=True): speed-up against the number of devices](../images/scaling.svg)
 
-Speed-up = time on one device / time on P devices; the times are in the
+Speed-up = time on one device / time on $P$ devices; the times are in the
 tables below.
 
 AMD Instinct MI210, one process per GPU, 4 GPUs per node, RCCL:
 
 | Case | 1 GPU | 2 GPUs | 4 GPUs | 8 GPUs (2 nodes) | Speed-up at 8 |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| online, N = 10⁶ | 176 | 87.9 | 43.6 | 21.3 | × 8.3 |
-| multiscale, N = 3 × 10⁶ | 128 | 66.6 | 34.1 | 18.0 | × 7.1 |
-| multiscale, N = 10⁷ | 1391 | 704 | 363 | 188 | × 7.4 |
+| online, $N = 10^6$ | 176 | 87.9 | 43.6 | 21.3 | × 8.3 |
+| multiscale, $N = 3 \times 10^6$ | 128 | 66.6 | 34.1 | 18.0 | × 7.1 |
+| multiscale, $N = 10^7$ | 1391 | 704 | 363 | 188 | × 7.4 |
 
 CPU nodes of 2 × AMD EPYC 9654 (192 cores), one process per node with all
 its cores, Gloo over TCP:
 
 | Case | 1 node | 2 nodes | 4 nodes | 8 nodes | Speed-up at 8 |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| online, N = 10⁶ | 157 | 78.7 | 40.3 | 20.7 | × 7.6 |
-| multiscale, N = 3 × 10⁶ | 130 | 65.1 | 33.5 | 17.4 | × 7.4 |
-| multiscale, N = 10⁷ | 1453 | 720 | 364 | 185 | × 7.9 |
+| online, $N = 10^6$ | 157 | 78.7 | 40.3 | 20.7 | × 7.6 |
+| multiscale, $N = 3 \times 10^6$ | 130 | 65.1 | 33.5 | 17.4 | × 7.4 |
+| multiscale, $N = 10^7$ | 1453 | 720 | 364 | 185 | × 7.9 |
 
 ## When it pays
 
 Each softmin exchanges one vector the size of a cloud, while its work is the
 product of the two sizes: for large clouds, the speed-up is close to the
 number of processes, on GPUs as on CPU nodes. Splitting pays when one loss
-takes seconds or more on one device, from about 10⁵ points with `online` and
-10⁶ with `multiscale`. Below that, the latency of the collectives (tens of
+takes seconds or more on one device, from about $10^5$ points with `online` and
+$10^6$ with `multiscale`. Below that, the latency of the collectives (tens of
 microseconds within a node, more across nodes, at every softmin of every
 iteration) dominates: keep `distributed=False`.
 

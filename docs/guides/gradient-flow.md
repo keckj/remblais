@@ -84,4 +84,4 @@ flow ends well below the two kernel flows.
   3D) keeps the memory linear in the number of points.
 - With an optimizer such as `torch.optim.SGD`, remember that the raw gradient
   scales with the weights: either divide by `a`, as above, or rescale the
-  learning rate by N.
+  learning rate by $N$.

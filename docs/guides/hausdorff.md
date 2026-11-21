@@ -10,20 +10,20 @@ sampling.
 ## Definition
 
 remblais implements the divergence of Feydy et al. (AISTATS 2019). With
-ε = blurᵖ and the softmin
+$\varepsilon = \texttt{blur}^p$ and the softmin
 
-```
-softmin_ε(μ)(z) = −ε log Σ_w μ(w) exp(−C(z, w) / ε),
-```
+$$
+\operatorname{softmin}_\varepsilon(\mu)(z) = -\varepsilon \log \sum_w \mu(w) \exp(-C(z, w) / \varepsilon),
+$$
 
-let a = softmin_ε(α) and b = softmin_ε(β). Then
+let $a = \operatorname{softmin}_\varepsilon(\alpha)$ and $b = \operatorname{softmin}_\varepsilon(\beta)$. Then
 
-```
-H_ε(α, β) = ½ ⟨α, b − a⟩ + ½ ⟨β, a − b⟩.
-```
+$$
+H_\varepsilon(\alpha, \beta) = \frac{1}{2} \langle \alpha, b - a \rangle + \frac{1}{2} \langle \beta, a - b \rangle.
+$$
 
-As the blur goes to 0, H_ε tends to ½ ⟨α, d(·, supp β)⟩ + ½ ⟨β, d(·, supp α)⟩,
-where d(z, S) is the cost from z to the nearest point of S: the symmetric ICP
+As the blur goes to 0, $H_\varepsilon$ tends to $\frac{1}{2} \langle \alpha, d(\cdot, \operatorname{supp} \beta) \rangle + \frac{1}{2} \langle \beta, d(\cdot, \operatorname{supp} \alpha) \rangle$,
+where $d(z, S)$ is the cost from $z$ to the nearest point of $S$: the symmetric ICP
 cost.
 
 ## Usage
@@ -50,8 +50,8 @@ x.requires_grad_()
 print(g.shape)
 ```
 
-With `potentials=True`, the loss returns F = b − a on `x` and G = a − b on
-`y`, so that H = ½(⟨α, F⟩ + ⟨β, G⟩).
+With `potentials=True`, the loss returns $F = b - a$ on `x` and $G = a - b$ on
+`y`, so that $H = \frac{1}{2}(\langle \alpha, F \rangle + \langle \beta, G \rangle)$.
 
 ## Difference with GeomLoss
 

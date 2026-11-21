@@ -1,11 +1,13 @@
 # Derived from GeomLoss v0.3.1 (geomloss/_legacy/kernel_samples.py),
 # Copyright (c) 2019 Jean Feydy, MIT License (see THIRD_PARTY.md).
-"""Kernel norms (MMD) between point clouds: energy, gaussian, laplacian, custom kernel.
+r"""Kernel norms (MMD) between point clouds: energy, gaussian, laplacian, custom kernel.
 
-    Loss(α, β) = ½⟨α, k⋆α⟩ + ½⟨β, k⋆β⟩ − ⟨α, k⋆β⟩
+$$
+\text{Loss}(\alpha, \beta) = \frac{1}{2}\langle \alpha, k \star \alpha \rangle + \frac{1}{2}\langle \beta, k \star \beta \rangle - \langle \alpha, k \star \beta \rangle
+$$
 
 Backends: ``tensorized`` (dense Torch matrices), ``online`` (fused kernox SUM
-reductions, 1/blur as a parameter), ``multiscale`` (block-sparse truncation
+reductions, $1/\texttt{blur}$ as a parameter), ``multiscale`` (block-sparse truncation
 at ``truncate`` standard deviations, kernox ranges).
 """
 
@@ -22,7 +24,7 @@ from .utils import distances, max_diameter, scal, squared_distances
 
 
 class DoubleGrad(torch.autograd.Function):
-    """Identity in the forward pass, doubled gradient in the backward pass (symmetric ½⟨α, k⋆α⟩ terms)."""
+    r"""Identity in the forward pass, doubled gradient in the backward pass (symmetric $\frac{1}{2}\langle \alpha, k \star \alpha \rangle$ terms)."""
 
     @staticmethod
     def forward(ctx, input):
@@ -74,7 +76,7 @@ kernel_params = {
 
 
 class Kernel:
-    """Kernel: ``formula(x, y, s)`` (kernox), ``param(blur)`` → s, and ``dense(x, y, blur=...)``."""
+    r"""Kernel: ``formula(x, y, s)`` (kernox), ``param(blur)`` $\to s$, and ``dense(x, y, blur=...)``."""
 
     def __init__(self, key, formula, dense, param=None):
         self.key, self.formula, self.dense = key, formula, dense

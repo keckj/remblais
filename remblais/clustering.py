@@ -27,10 +27,10 @@ def _dense_rank(key):
 
 
 def grid_cluster(x, size):
-    """Labels each point of ``x`` (N, D) with its cell in a grid of step ``size``.
+    r"""Labels each point of ``x`` (N, D) with its cell in a grid of step ``size``.
 
-    The labels are contiguous (0 … C−1) and follow the lexicographic order of the
-    cells, like ``pykeops.torch.cluster.grid_cluster`` (without its D ≤ 3 limit
+    The labels are contiguous ($0, \dots, C - 1$) and follow the lexicographic order of the
+    cells, like ``pykeops.torch.cluster.grid_cluster`` (without its $D \le 3$ limit
     or the risk of collision of its 32-bit integer encoding).
     """
     with torch.no_grad():
@@ -49,12 +49,12 @@ def grid_cluster(x, size):
 
 
 def cluster_ranges_centroids(x, lab, weights=None, nlab=None):
-    """(C, 2) ranges of the clusters (points assumed sorted by label), centroids, masses.
+    r"""(C, 2) ranges of the clusters (points assumed sorted by label), centroids, masses.
 
     Centroid = barycenter weighted by ``weights`` (uniform otherwise), mass = sum
     of the weights. An empty or zero-mass cluster has the unweighted mean of its
     points as centroid (0 if empty) and a zero mass; a singleton has its point as
-    centroid, exactly (no rounding of x·w/w).
+    centroid, exactly (no rounding of $x \cdot w/w$).
     """
     with torch.no_grad():
         lab = lab.view(-1)
@@ -120,10 +120,10 @@ _TILE_M = 128  # row tile height of the ranged kernels (cost model)
 
 
 def ranged_cost_ratio(clusters_i, clusters_j, keep):
-    """Estimated cost of the kept blocks, relative to N·M.
+    r"""Estimated cost of the kept blocks, relative to $N \cdot M$.
 
-    Each cluster i takes ⌈n_i / T⌉ tiles of T rows: a cluster of 5 points costs
-    as much as T rows. Σ_ij keep_ij · T⌈n_i/T⌉ · n_j / (N·M).
+    Each cluster $i$ takes $\lceil n_i / T \rceil$ tiles of $T$ rows: a cluster of 5 points costs
+    as much as $T$ rows. $\sum_{ij} \texttt{keep}_{ij} \cdot T \lceil n_i/T \rceil \cdot n_j / (N \cdot M)$.
     """
     with torch.no_grad():
         ni = (clusters_i.ranges[:, 1] - clusters_i.ranges[:, 0]).to(torch.float64)

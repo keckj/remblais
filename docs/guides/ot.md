@@ -12,7 +12,7 @@ interface as still in development; remblais follows it as it is in 0.3.1.
 ## Transport between point clouds
 
 `ot.solve_sample` takes the coordinates of the two clouds and computes the
-cost on the fly, without storing the N × M matrix: in remblais, the
+cost on the fly, without storing the $N \times M$ matrix: in remblais, the
 reductions run on kernox.
 
 ```python
@@ -44,19 +44,19 @@ print(result.potential_a.shape, result.potential_b.shape)   # (1000,) and (1500,
 ```
 
 `blur` and `reach` are the same lengths as for `SamplesLoss`, but the `ot`
-module uses the cost C(x, y) = ‖x − y‖², without the ½ of `SamplesLoss`
+module uses the cost $C(x, y) = \|x - y\|^2$, without the $\frac{1}{2}$ of `SamplesLoss`
 (see [Concepts](../concepts.md#blur-reach-and-scaling)). The same `blur`
-therefore gives ε = 2 · blur² here instead of ε = blur², and the same kernel
-exp(−C/ε). `reg` sets ε directly. Likewise, `reach` (ρ = 2 · reach²) and
-`unbalanced` (ρ directly) enable unbalanced transport.
+therefore gives $\varepsilon = 2\,\texttt{blur}^2$ here instead of $\varepsilon = \texttt{blur}^2$, and the same kernel
+$\exp(-C/\varepsilon)$. `reg` sets $\varepsilon$ directly. Likewise, `reach` ($\rho = 2\,\texttt{reach}^2$) and
+`unbalanced` ($\rho$ directly) enable unbalanced transport.
 
 ## Reading the result
 
 The attributes are computed the first time you read them, then cached:
 
 - `value`: the regularized transport cost;
-- `potential_a`, `potential_b`: the dual potentials f and g;
-- `plan`: the dense N × M transport plan (avoid it for large clouds);
+- `potential_a`, `potential_b`: the dual potentials $f$ and $g$;
+- `plan`: the dense $N \times M$ transport plan (avoid it for large clouds);
 - `lazy_plan`: the same plan as a lazy, kernox-backed `LazyTensor`, never
   stored;
 - `plan_operator`: the plan as a linear operator, to multiply with `@`

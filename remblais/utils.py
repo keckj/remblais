@@ -6,7 +6,7 @@ import torch
 
 
 def scal(a, f, batch=False):
-    """⟨a, f⟩, per batch element if ``batch``."""
+    r"""$\langle a, f \rangle$, per batch element if ``batch``."""
     if batch:
         B = a.shape[0]
         return (a.reshape(B, -1) * f.reshape(B, -1)).sum(1)
@@ -14,7 +14,7 @@ def scal(a, f, batch=False):
 
 
 def squared_distances(x, y):
-    """Dense ‖x_i − y_j‖², (N, M) or (B, N, M), with the GeomLoss identity."""
+    r"""Dense $\|x_i - y_j\|^2$, (N, M) or (B, N, M), with the GeomLoss identity."""
     if x.dim() == 2:
         D_xx = (x * x).sum(-1).unsqueeze(1)
         D_xy = torch.matmul(x, y.permute(1, 0))
@@ -29,7 +29,7 @@ def squared_distances(x, y):
 
 
 def distances(x, y):
-    """Dense ‖x_i − y_j‖, with the 1e-8 floor under the square root (like GeomLoss)."""
+    r"""Dense $\|x_i - y_j\|$, with the 1e-8 floor under the square root (like GeomLoss)."""
     return torch.sqrt(torch.clamp_min(squared_distances(x, y), 1e-8))
 
 

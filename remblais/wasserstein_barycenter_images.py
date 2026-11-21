@@ -27,13 +27,13 @@ def barycenter_iteration(f_k, g_k, d_log, eps, p, ak_log, w_k):
 
 
 def ImagesBarycenter(measures, weights, blur=0, p=2, scaling_N=10, backward_iterations=5):
-    """Wasserstein barycenter of images (debiased Sinkhorn, Janati et al. 2020).
+    r"""Wasserstein barycenter of images (debiased Sinkhorn, Janati et al. 2020).
 
     Same parameters and same algorithm as GeomLoss 0.3.1.
 
-    :param measures: (B, K, N, N) densities, N a power of 2.
+    :param measures: (B, K, N, N) densities, $N$ a power of 2.
     :param weights: (B, K) barycentric weights, summing to 1.
-    :param blur: length scale; ``0`` means one pixel, 1/N.
+    :param blur: length scale; ``0`` means one pixel, $1/N$.
     :param p: exponent of the cost.
     :param scaling_N: number of iterations per level of the image pyramid.
     :param backward_iterations: number of final iterations that are

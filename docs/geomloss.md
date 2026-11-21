@@ -46,8 +46,8 @@ As in GeomLoss, `ot` is a submodule: import it explicitly.
 - PyKeOps, and its compilation toolchain. kernox compiles its kernels at
   runtime with NVRTC (NVIDIA), hipRTC (AMD) or the oneAPI compiler (Intel),
   and caches them on disk.
-- Recompilations when ε changes: in remblais, ε and the blur are parameters
-  of the compiled reduction, so the whole ε-scaling loop, every call and
+- Recompilations when $\varepsilon$ changes: in remblais, $\varepsilon$ and the blur are parameters
+  of the compiled reduction, so the whole $\varepsilon$-scaling loop, every call and
   every batch reuse one kernel.
 
 ## Things that work differently
@@ -142,9 +142,9 @@ These are the places where remblais does not reproduce GeomLoss 0.3.1 on
 purpose, usually because GeomLoss has a bug there.
 
 1. **Gradient of unbalanced transport.** GeomLoss defines the correction
-   of the unbalanced gradient (weight ρ + ε) in the `backward` method of an
+   of the unbalanced gradient (weight $\rho + \varepsilon$) in the `backward` method of an
    `nn.Module`, which PyTorch never calls. Its effective gradient uses
-   ρ + ε/2 and is off by about ε/(2ρ) (3 % for ρ = 1, ε = 0.25). remblais
+   $\rho + \varepsilon/2$ and is off by about $\varepsilon/(2\rho)$ (3 % for $\rho = 1$, $\varepsilon = 0.25$). remblais
    applies the intended correction with a `torch.autograd.Function`: at
    convergence, the gradients agree with finite differences to 1e-9. Values
    and potentials are unchanged, bit for bit.
@@ -163,17 +163,17 @@ purpose, usually because GeomLoss has a bug there.
    a tensor of shape `(1,)`.
 5. **Unbalanced multiscale.** GeomLoss reuses the name `eps` by mistake
    while looking for the coarse-to-fine jump, so its final value uses
-   ρ + ε′/2 with ε′ ≠ blurᵖ. remblais uses ε = blurᵖ.
+   $\rho + \varepsilon'/2$ with $\varepsilon' \neq \texttt{blur}^p$. remblais uses $\varepsilon = \texttt{blur}^p$.
 6. **Zero distances.** Like GeomLoss with KeOps, the `online` and
-   `multiscale` backends compute ‖x − y‖ = 0 exactly, with a zero gradient at
-   x = y; the `tensorized` backend keeps the 1e-8 floor of GeomLoss under the
+   `multiscale` backends compute $\|x - y\| = 0$ exactly, with a zero gradient at
+   $x = y$; the `tensorized` backend keeps the 1e-8 floor of GeomLoss under the
    square root.
 7. **Grid clustering.** `grid_cluster` labels the cells by a dense rank
    obtained by sorting, in lexicographic order like PyKeOps. It has no
-   D ≤ 3 limit and no collisions of the 32-bit integer encoding of PyKeOps.
+   $D \le 3$ limit and no collisions of the 32-bit integer encoding of PyKeOps.
    The centroid of a cluster with a single point is that point, exactly.
 8. **Dense fallback of multiscale.** When the clusters are so small that the
-   kept blocks would cost more than 0.75 × N · M pair evaluations (counting
+   kept blocks would cost more than $0.75 \times N \cdot M$ pair evaluations (counting
    each cluster as whole tiles of 128 rows), the fine level is computed on
    all pairs, without truncation; the coarse levels are those of GeomLoss.
    No term is dropped, so the result is at least as accurate. This happens
@@ -213,7 +213,7 @@ the same by default, and makes it explicit with the `fast_math` argument of
   FP64 and on the CPU, and is refused by the kernox backends that do
   not offer it.
 
-The relative error of the approximate `exp` is at most 2⁻²¹ + |x| · 2⁻²⁴
+The relative error of the approximate `exp` is at most $2^{-21} + |x| \cdot 2^{-24}$
 (the kernox contract). `sinkhorn_divergence` on images, `ImagesBarycenter`
 and the `ot` module always use IEEE arithmetic.
 
@@ -232,11 +232,11 @@ print(ieee(x, y))
 
 ## Subnormal numbers
 
-Subnormal numbers are the tiny values below about 10⁻³⁸ in FP32 (10⁻³⁰⁸ in
+Subnormal numbers are the tiny values below about $10^{-38}$ in FP32 ($10^{-308}$ in
 FP64). An operation that produces one is many times slower on CPUs, and the
 Gaussian kernels and softmins of remblais produce many when the blur is small.
 They never change a loss or a gradient in practice: a softmin sums terms whose
-largest is 1, and a kernel norm holds terms equal to 1 (`k(x, x)`).
+largest is 1, and a kernel norm holds terms equal to 1 ($k(x, x)$).
 
 PyKeOps' `-use_fast_math` also flushes subnormal numbers to zero on NVIDIA
 GPUs. remblais does the same by default, with the `flush_denormals` argument of

@@ -1,13 +1,13 @@
-"""Bridge to kernox: costs, kernels, reduction plans compiled once and reused.
+r"""Bridge to kernox: costs, kernels, reduction plans compiled once and reused.
 
-Each reduction is compiled **once** per (cost, D, dtype, backend): ε (or
-1/blur) is a parameter of the plan, so all the iterations of ε-scaling, the
+Each reduction is compiled **once** per (cost, D, dtype, backend): $\varepsilon$ (or
+$1/\texttt{blur}$) is a parameter of the plan, so all the iterations of $\varepsilon$-scaling, the
 four softmins (xy, yx, xx, yy), the coarse and fine levels of the multiscale
 backend and successive calls to the loss share the same kernel.
 
 On the CPU, the native kernox backend (multithreaded, vectorized C++, kernox
 1.1 or later, Linux x86-64 with g++) is used when the host supports it, and the
-blockwise Torch oracle (an explicit reference, without a full M×N matrix)
+blockwise Torch oracle (an explicit reference, without a full $M \times N$ matrix)
 otherwise.
 """
 
@@ -80,14 +80,14 @@ DEFAULT_COSTS = {1: cost_p1, 2: cost_p2}
 
 
 class Cost:
-    """Transport cost: a kernox formula (online backends) and a dense matrix (tensorized backend).
+    r"""Transport cost: a kernox formula (online backends) and a dense matrix (tensorized backend).
 
     ``formula(x, y)`` receives two ``Formula`` objects (``Vi``, ``Vj``) and returns a
     scalar formula; ``dense(x, y)`` receives (B, N, D), (B, M, D) or (N, D), (M, D)
     tensors and returns the cost matrix.
 
-    ``kernel_formula`` and ``factor`` (optional): C = factor · kernel_formula. The
-    online plans then use ``kernel_formula`` and the parameter ``s = factor/ε``
+    ``kernel_formula`` and ``factor`` (optional): $C = \texttt{factor} \cdot \texttt{kernel\_formula}$. The
+    online plans then use ``kernel_formula`` and the parameter $s = \texttt{factor}/\varepsilon$
     (one multiplication per pair instead of one per coordinate: symox distributes
     constants over sums).
     """
@@ -180,7 +180,7 @@ def _plan(key, build, dtype, backend):
 
 
 def lse_plan(cost, D, dtype, backend):
-    """``log Σ_j exp(h_j − s·C(x_i, y_j))``; ``s = 1/ε`` is a parameter."""
+    r"""$\log \sum_j \exp(h_j - s \cdot C(x_i, y_j))$; $s = 1/\varepsilon$ is a parameter."""
 
     def build():
         x, y, h, s = kp.Vi("x", D), kp.Vj("y", D), kp.Vj("h", 1), kp.Param("s")
@@ -190,9 +190,9 @@ def lse_plan(cost, D, dtype, backend):
 
 
 def lse2_plan(cost, D, dtype, backend):
-    """LSE with two sets of scores: ``log Σ_j exp(q_i·a_j + r_i·b_j − s·C(x_i, y_j))``.
+    r"""LSE with two sets of scores: $\log \sum_j \exp(q_i \cdot a_j + r_i \cdot b_j - s \cdot C(x_i, y_j))$.
 
-    With (q_i, r_i) ∈ {(1, 0), (0, 1)}, the selection is exact (products by 0 or
+    With $(q_i, r_i) \in \{(1, 0), (0, 1)\}$, the selection is exact (products by 0 or
     1, sum with a zero): two softmins with the same j set and different rows run
     in a single launch.
     """
@@ -206,9 +206,9 @@ def lse2_plan(cost, D, dtype, backend):
 
 
 def lse2(cost, x, q, r, y, ha, hb, s):
-    """x (…, N, D), q/r (…, N), y (…, M, D), ha/hb (…, M); returns (…, N).
+    r"""x (…, N, D), q/r (…, N), y (…, M, D), ha/hb (…, M); returns (…, N).
 
-    ``s``: the **full** parameter (``cost.factor/ε``), a number or a (1,) tensor.
+    ``s``: the **full** parameter ($\texttt{cost.factor}/\varepsilon$), a number or a (1,) tensor.
     """
     run = lse2_plan(cost, x.shape[-1], dtype_name(x), backend_for(x.device))
     out = _call(run, None, x=x, q=q.unsqueeze(-1), r=r.unsqueeze(-1), y=y, ha=ha.unsqueeze(-1),
@@ -217,8 +217,8 @@ def lse2(cost, x, q, r, y, ha, hb, s):
 
 
 def lse2dot_plan(D, dtype, backend):
-    """Dot-product variant of `lse2_plan` for ½‖x − y‖²:
-    ``log Σ_j exp(q_i·a_j + r_i·b_j + s⟨x_i, y_j⟩)`` (the norms go into a, b and the output)."""
+    r"""Dot-product variant of `lse2_plan` for $\frac{1}{2}\|x - y\|^2$:
+    $\log \sum_j \exp(q_i \cdot a_j + r_i \cdot b_j + s \langle x_i, y_j \rangle)$ (the norms go into $a$, $b$ and the output)."""
 
     def build():
         x, q, r = kp.Vi("x", D), kp.Vi("q", 1), kp.Vi("r", 1)
@@ -236,7 +236,7 @@ def lse2dot(x, q, r, y, ha, hb, s):
 
 
 def kernel_plan(kernel, D, dtype, backend):
-    """``Σ_j k(x_i, y_j) b_j``; ``s = 1/blur`` is a parameter."""
+    r"""$\sum_j k(x_i, y_j)\, b_j$; $s = 1/\texttt{blur}$ is a parameter."""
 
     def build():
         x, y, b, s = kp.Vi("x", D), kp.Vj("y", D), kp.Vj("b", 1), kp.Param("s")
@@ -305,13 +305,13 @@ def lse(cost, x, y, h, inv_eps, ranges=None):
 
 
 def lse_full(cost, x, y, h, s):
-    """Like `lse`, with the **full** parameter ``s`` (``cost.factor/ε``, a number or a (1,) tensor)."""
+    r"""Like `lse`, with the **full** parameter ``s`` ($\texttt{cost.factor}/\varepsilon$, a number or a (1,) tensor)."""
     run = lse_plan(cost, x.shape[-1], dtype_name(x), backend_for(x.device))
     return _call(run, None, x=x, y=y, h=h.unsqueeze(-1), s=s).squeeze(-1)
 
 
 def kernel_product(kernel, x, y, b, inv_blur, ranges=None):
-    """Online Σ_j k(x_i, y_j) b_j; returns (…, N)."""
+    r"""Online $\sum_j k(x_i, y_j)\, b_j$; returns (…, N)."""
     run = kernel_plan(kernel, x.shape[-1], dtype_name(x), backend_for(x.device))
     out = _call(run, ranges, x=x, y=y, b=b.unsqueeze(-1), s=inv_blur)
     return out.squeeze(-1)
