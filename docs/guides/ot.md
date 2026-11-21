@@ -43,9 +43,12 @@ print(result.value)
 print(result.potential_a.shape, result.potential_b.shape)   # (1000,) and (1500,)
 ```
 
-`blur` sets the regularization as for `SamplesLoss` (ε = 2 · blur² for the
-squared Euclidean cost); `reg` sets ε directly. Likewise, `reach` and
-`unbalanced` enable unbalanced transport.
+`blur` and `reach` are the same lengths as for `SamplesLoss`, but the `ot`
+module uses the cost C(x, y) = ‖x − y‖², without the ½ of `SamplesLoss`
+(see [Concepts](../concepts.md#blur-reach-and-scaling)). The same `blur`
+therefore gives ε = 2 · blur² here instead of ε = blur², and the same kernel
+exp(−C/ε). `reg` sets ε directly. Likewise, `reach` (ρ = 2 · reach²) and
+`unbalanced` (ρ directly) enable unbalanced transport.
 
 ## Reading the result
 

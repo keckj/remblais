@@ -9,7 +9,7 @@ import math
 class LinearOperator:
     """Linear operator that can be applied to arrays, without being explicitly instantiated as a matrix.
 
-    .. automethod:: __matmul__
+    Apply it to an array with `@` (`op @ x`), and transpose it with `op.T`.
     """
 
     def __init__(self, *, matmat, rmatmat, input_shape, output_shape):

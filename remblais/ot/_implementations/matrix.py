@@ -298,34 +298,34 @@ class OTResultMatrix(OTResult):
         Example
         -------
 
-        .. testcode::
+        ```python
+        import numpy as np
+        from remblais import ot
 
-            import numpy as np
-            from geomloss import ot
+        # Solve a balanced, 2x3 OT problem with entropic regularization:
+        solution = ot.solve(
+            C=[[0., 1., 4.],
+               [2., 1., 0.]],
+            a=[2, 2],
+            b=[1, 1, 2],
+            reg=0.001,
+            max_iter=100,
+        )
+        print(solution.plan)
+        ```
 
-            # Solve a balanced, 2x3 OT problem with entropic regularization:
-            solution = ot.solve(
-                C=[[0., 1., 4.],
-                   [2., 1., 0.]],
-                a=[2, 2],
-                b=[1, 1, 2],
-                reg=0.001,
-                max_iter=100,
-            )
-            print(solution.plan)
+        ```text
+        [[1. 1. 0.]
+         [0. 0. 2.]]
+        ```
 
-        .. testoutput::
+        ```python
+        print(solution.plan_operator @ np.array([-2., 1., 1.]))
+        ```
 
-            [[1. 1. 0.]
-             [0. 0. 2.]]
-
-        .. testcode::
-
-            print(solution.plan_operator @ np.array([-2., 1., 1.]))
-
-        .. testoutput::
-
-            [-1.  2.]
+        ```text
+        [-1.  2.]
+        ```
 
 
         Returns
@@ -368,7 +368,7 @@ def solve(
 ) -> OTResultMatrix:
     r"""Solves an optimal transport problem with an explicit cost matrix.
 
-    .. warning::
+    !!! warning
         The interface of this solver is still in development and may change in future releases.
         We welcome any feedback and suggestions for improvement.
 
@@ -462,33 +462,33 @@ def solve(
     Examples
     --------
 
-    .. testcode::
+    ```python
+    from remblais import ot
 
-        from geomloss import ot
+    # Solve a balanced, 2x3 OT problem with entropic regularization:
+    solution = ot.solve(
+        C=[[0., 1., 4.],
+           [2., 1., 0.]],
+        a=[2, 2],
+        b=[1, 1, 2],
+        reg=0.001,
+        max_iter=100,
+    )
+    print(solution.plan)
+    ```
 
-        # Solve a balanced, 2x3 OT problem with entropic regularization:
-        solution = ot.solve(
-            C=[[0., 1., 4.],
-               [2., 1., 0.]],
-            a=[2, 2],
-            b=[1, 1, 2],
-            reg=0.001,
-            max_iter=100,
-        )
-        print(solution.plan)
+    ```text
+    [[1. 1. 0.]
+     [0. 0. 2.]]
+    ```
 
-    .. testoutput::
+    ```python
+    print(f"{solution.value:.3f}")
+    ```
 
-        [[1. 1. 0.]
-         [0. 0. 2.]]
-
-    .. testcode::
-
-        print(f"{solution.value:.3f}")
-
-    .. testoutput::
-
-        0.997
+    ```text
+    0.997
+    ```
 
 
     """
@@ -542,7 +542,7 @@ def solve_batch(
 ):
     r"""Batched version of `solve`, which can solve multiple OT problems in parallel.
 
-    .. warning::
+    !!! warning
         The interface of this solver is still in development and may change in future releases.
         We welcome any feedback and suggestions for improvement.
 
@@ -575,39 +575,39 @@ def solve_batch(
     Examples
     --------
 
-    .. testcode::
+    ```python
+    from remblais import ot
+    # Solve a batch of 2 balanced, 2x3 OT problems with entropic regularization:
+    solution = ot.solve_batch(
+        C=[[[0., 1., 4.],
+            [2., 1., 0.]],
+           [[0., 2., 3.],
+            [1., 0., 1.]]],
+        a=[[2, 2],
+           [1, 3]],
+        b=[[1, 1, 2],
+           [2, 1, 1]],
+        reg=0.001,
+        max_iter=1000,
+    )
+    print(solution.plan.round(3))
+    ```
 
-        from geomloss import ot
-        # Solve a batch of 2 balanced, 2x3 OT problems with entropic regularization:
-        solution = ot.solve_batch(
-            C=[[[0., 1., 4.],
-                [2., 1., 0.]],
-               [[0., 2., 3.],
-                [1., 0., 1.]]],
-            a=[[2, 2],
-               [1, 3]],
-            b=[[1, 1, 2],
-               [2, 1, 1]],
-            reg=0.001,
-            max_iter=1000,
-        )
-        print(solution.plan)
+    ```text
+    [[[1.    1.    0.   ]
+      [0.    0.    2.   ]]
 
-    .. testoutput::
+     [[1.005 0.    0.   ]
+      [0.988 1.003 1.003]]]
+    ```
 
-        [[[1.    1.    0.   ]
-          [0.    0.    2.   ]]
+    ```python
+    print(solution.value.round(3))
+    ```
 
-         [[1.005 0.    0.   ]
-          [0.988 1.003 1.003]]]
-
-    .. testcode::
-
-        print(f"{solution.value}")
-
-    .. testoutput::
-
-        [0.997 1.995]
+    ```text
+    [0.997 1.995]
+    ```
 
     """
 

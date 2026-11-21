@@ -218,7 +218,7 @@ def solve_sample(
 ):
     r"""Solves an optimal transport problem between point clouds.
 
-    .. warning::
+    !!! warning
         The interface of this solver is still in development and may change in future releases.
         We welcome any feedback and suggestions for improvement.
 
@@ -243,11 +243,11 @@ def solve_sample(
         without shrinking artifacts (the so-called "entropic bias"). This is desirable when the value of the optimal
         transport problem is used as a loss function.
     blur: float > 0, default: None
-        Redundant parameter that specifies the regularization strength as $\texttt{reg} = \varepsilon = 2 * \texttt{blur}^2$,
+        Redundant parameter that specifies the regularization strength as $\texttt{reg} = \varepsilon = 2\,\texttt{blur}^2$,
         when the cost is the squared Euclidean distance. This is a more intuitive parameter for geometric applications, since it corresponds to the "blurring radius" $\sigma$ of the kernel $k(x,y) = e^{-\|x-y\|^2 / 2 \sigma^2} = e^{-\|x-y\|^2 / \varepsilon}$.
         This parameter should not be used together with `reg`, which is a more general regularization parameter that can be used with any cost and any regularization type.
     reach: float > 0, default: None
-        Redundant parameter that specifies the unbalanced OT penalty strength as $\texttt{unbalanced} = \rho = 2 * \texttt{reach}^2$, when the cost is the squared Euclidean distance.
+        Redundant parameter that specifies the unbalanced OT penalty strength as $\texttt{unbalanced} = \rho = 2\,\texttt{reach}^2$, when the cost is the squared Euclidean distance.
 
     Notes
     -----
@@ -256,30 +256,30 @@ def solve_sample(
     Examples
     --------
 
-    .. testcode::
+    ```python
+    from remblais import ot
 
-        from geomloss import ot
+    solution = ot.solve_sample(
+        X_a=[[0, 0], [0, 2]],
+        X_b=[[2, 1], [2, 2]],
+        reg=0.001,
+        max_iter=100,
+    )
+    print(solution.plan)
+    ```
 
-        solution = ot.solve_sample(
-            X_a=[[0, 0], [0, 2]],
-            X_b=[[2, 1], [2, 2]],
-            reg=0.001,
-            max_iter=100,
-        )
-        print(solution.plan)
+    ```text
+    [[0.5 0. ]
+     [0.  0.5]]
+    ```
 
-    .. testoutput::
+    ```python
+    print(f"{solution.value:.3f}")
+    ```
 
-        [[0.5 0. ]
-         [0.  0.5]]
-
-    .. testcode::
-
-        print(f"{solution.value:.3f}")
-
-    .. testoutput::
-
-        4.501
+    ```text
+    4.501
+    ```
 
 
 

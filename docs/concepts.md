@@ -113,7 +113,7 @@ These parameters have a geometric meaning: they are lengths, in the units of
 your data.
 
 - **`blur`** (σ) is the scale below which details are ignored. Entropic
-  regularization uses ε = blurᵖ. A small blur gives a sharper, more faithful
+  regularization uses ε = blurᵖ, with the cost C above. A small blur gives a sharper, more faithful
   transport, at the price of more iterations. A typical value is a small
   fraction of the size of your data, such as 0.01 to 0.05 for data in the
   unit cube. For kernel losses, `blur` is the width of the kernel.
