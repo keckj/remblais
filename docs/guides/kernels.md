@@ -1,6 +1,7 @@
 # Kernel MMD
 
-Kernel norms, also known as maximum mean discrepancies (MMD), compare two
+Kernel norms, also known as maximum mean discrepancies
+(MMD, [Gretton et al., 2012](https://jmlr.org/papers/v13/gretton12a.html)), compare two
 measures through a kernel $k$:
 
 $$

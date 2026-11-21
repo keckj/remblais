@@ -50,11 +50,11 @@ their own function, described in [Images and volumes](guides/images.md).
 The `loss` argument of `SamplesLoss` picks the family:
 
 - `"sinkhorn"`: the **Sinkhorn divergence**, a debiased entropic optimal
-  transport cost. It behaves like the Wasserstein distance at small blur, and
+  transport cost ([Feydy et al., 2019](https://proceedings.mlr.press/v89/feydy19a.html)). It behaves like the Wasserstein distance at small blur, and
   like a kernel norm at large blur. See
   [Sinkhorn divergences between point clouds](guides/sinkhorn.md).
 - `"gaussian"`, `"laplacian"`, `"energy"`: **kernel norms**, also known as
-  maximum mean discrepancies (MMD). Cheap and smooth, but with weaker
+  maximum mean discrepancies (MMD, [Gretton et al., 2012](https://jmlr.org/papers/v13/gretton12a.html)). Cheap and smooth, but with weaker
   gradients far from the target. See [Kernel MMD](guides/kernels.md).
 - `"hausdorff"`: a **Hausdorff divergence**, a soft version of the distances
   used by ICP registration. See [Hausdorff divergence](guides/hausdorff.md).
@@ -121,12 +121,14 @@ your data.
   `reach=None`, all the mass must be transported, and the two measures must
   have the same total mass. With a finite reach, mass may also be created or
   destroyed, at a cost: points farther apart than about `reach` are not
-  matched. It makes the loss robust to outliers.
+  matched. It makes the loss robust to outliers
+  ([Séjourné et al., 2019](https://arxiv.org/abs/1910.12958)).
 - **`scaling`** controls $\varepsilon$-scaling, the annealing strategy of the Sinkhorn
   loop. The loop starts at a blur as large as the data (the `diameter`,
   estimated if not given) and multiplies it by `scaling` at each iteration,
   down to `blur`. Values close to 1 are more accurate and slower; 0.5 is fast
-  and 0.9 is precise.
+  and 0.9 is precise. This annealing and the multiscale backend follow
+  [Schmitzer (2019)](https://doi.org/10.1137/16M1106018) and J. Feydy's PhD thesis (2020).
 
 ```python
 precise = SamplesLoss("sinkhorn", blur=0.01, scaling=0.9)

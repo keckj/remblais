@@ -3,7 +3,8 @@
 The Sinkhorn divergence is the workhorse of remblais: a smooth, debiased
 approximation of the Wasserstein distance between two weighted point clouds,
 with gradients you can use for registration, generative models or shape
-matching.
+matching. It was introduced by [Feydy et al. (AISTATS 2019)](https://proceedings.mlr.press/v89/feydy19a.html); see
+[References](../references.md) for the other papers remblais implements.
 
 ## The basic call
 

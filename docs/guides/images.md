@@ -12,9 +12,14 @@ and remblais keeps the same name and signature. There is no separate
 
 ## Sinkhorn divergence between images
 
-Images have shape `(B, K, N, N)`: a batch of $B$ samples with $K$ channels each.
-Volumes have shape `(B, K, N, N, N)`. $N$ must be a power of 2. Each channel is
-a measure; normalize it so that it sums to 1.
+Images have shape `(B, K, N, N)`: a batch of $B$ samples with $K$ channels each,
+each channel a square of $N \times N$ pixels. Volumes have shape
+`(B, K, N, N, N)`. Each channel is a measure; normalize it so that it sums to 1.
+
+As in GeomLoss, the grid must be square (or cubic), with a side $N$ that is a
+power of 2 (64, 128, 256, ...). The multiscale algorithm halves the resolution
+repeatedly, down to a single pixel, and starts its iterations on the coarsest
+image. Pad other images with zeros, or resample them, before the call.
 
 ```python
 import torch
@@ -54,7 +59,8 @@ one value per pixel, with the shape of the images.
 ## Wasserstein barycenters
 
 `ImagesBarycenter` computes the weighted Wasserstein barycenter of $K$ images,
-with the debiased Sinkhorn algorithm of Janati et al. (2020). `measures` has
+with the debiased Sinkhorn algorithm of
+[Janati et al. (ICML 2020)](https://proceedings.mlr.press/v119/janati20a.html). `measures` has
 shape `(B, K, N, N)` and `weights` shape `(B, K)`, with weights that sum to 1;
 the result has shape `(B, 1, N, N)`.
 

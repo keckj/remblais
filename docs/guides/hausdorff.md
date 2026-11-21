@@ -9,7 +9,7 @@ sampling.
 
 ## Definition
 
-remblais implements the divergence of Feydy et al. (AISTATS 2019). With
+remblais implements the divergence of [Feydy et al. (AISTATS 2019)](https://proceedings.mlr.press/v89/feydy19a.html), section 2. With
 $\varepsilon = \texttt{blur}^p$ and the softmin
 
 $$

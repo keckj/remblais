@@ -4,7 +4,7 @@ GeomLoss v0.3.1 documents ``"hausdorff"`` ("interpolates between ICP, $\texttt{b
 and a kernel distance, $\texttt{blur} = +\infty$") but routes this name to the kernel norms:
 without a ``kernel`` argument, the call raises ``KeyError`` there. remblais
 keeps this routing when ``kernel`` is given, and otherwise implements the
-definition of Feydy et al. (AISTATS 2019, §2):
+definition of Feydy et al. (AISTATS 2019, section 2, https://proceedings.mlr.press/v89/feydy19a.html):
 
 $$
 a = \operatorname{softmin}_\varepsilon(\alpha), \quad b = \operatorname{softmin}_\varepsilon(\beta), \quad

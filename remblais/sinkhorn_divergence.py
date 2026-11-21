@@ -3,8 +3,8 @@
 r"""Symmetric Sinkhorn loop with $\varepsilon$-scaling, shared by all the backends.
 
 Same algorithm as GeomLoss v0.3.1 (Feydy et al., "Interpolating between
-Optimal Transport and MMD using Sinkhorn Divergences", AISTATS 2019, and
-J. Feydy's PhD thesis, 2020): damped symmetric updates, $\varepsilon$ decreasing from
+Optimal Transport and MMD using Sinkhorn Divergences", AISTATS 2019,
+https://proceedings.mlr.press/v89/feydy19a.html, and J. Feydy's PhD thesis, 2020): damped symmetric updates, $\varepsilon$ decreasing from
 $\texttt{diameter}^p$ to $\texttt{blur}^p$, differentiable final extrapolation (envelope theorem),
 debiased and unbalanced formulas.
 

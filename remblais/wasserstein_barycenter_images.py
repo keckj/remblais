@@ -27,7 +27,8 @@ def barycenter_iteration(f_k, g_k, d_log, eps, p, ak_log, w_k):
 
 
 def ImagesBarycenter(measures, weights, blur=0, p=2, scaling_N=10, backward_iterations=5):
-    r"""Wasserstein barycenter of images (debiased Sinkhorn, Janati et al. 2020).
+    r"""Wasserstein barycenter of images (debiased Sinkhorn,
+    [Janati et al., ICML 2020](https://proceedings.mlr.press/v119/janati20a.html)).
 
     Same parameters and same algorithm as GeomLoss 0.3.1.
 
