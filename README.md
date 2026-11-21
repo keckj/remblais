@@ -123,14 +123,10 @@ mpirun -np 8 --map-by ppr:1:node --bind-to none python fit.py       # 8 CPU node
 ```
 
 Debiased Sinkhorn divergence, p = 2, blur = 0.05, D = 3, FP32, forward and
-backward passes, one process per GPU or per CPU node:
+backward passes, one process per GPU or per CPU node. Speed-up = time on one
+device / time on P devices:
 
-| Case | 1 device | 8 devices | Speed-up |
-| --- | --- | --- | --- |
-| online, N = 10⁶, AMD MI210 (2 nodes of 4) | 176 s | 21.3 s | × 8.3 |
-| multiscale, N = 10⁷, AMD MI210 (2 nodes of 4) | 1391 s | 188 s | × 7.4 |
-| online, N = 10⁶, CPU nodes (2 × EPYC 9654) | 157 s | 20.7 s | × 7.6 |
-| multiscale, N = 10⁷, CPU nodes (2 × EPYC 9654) | 1453 s | 185 s | × 7.9 |
+![Strong scaling of remblais: speed-up against the number of devices](docs/images/scaling.svg)
 
 The guide [Several GPUs or nodes](docs/guides/distributed.md) goes through
 it step by step, with [all the measurements](docs/guides/distributed.md#scaling)
