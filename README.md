@@ -74,37 +74,17 @@ The goal of remblais is to be **at least as fast as GeomLoss** wherever
 GeomLoss runs. In every case measured so far, on an NVIDIA GPU and on the
 CPU, it is faster.
 
-Sinkhorn divergence, p = 2, FP32, forward and backward passes, on an RTX
-5090; remblais with its default settings, against GeomLoss 0.3.1 with PyKeOps
-2.3 in its best configuration (each PyKeOps kernel compiled alone in a fresh
-process). Speed-up of remblais (GeomLoss time / remblais time):
+Sinkhorn divergence, p = 2, FP32, forward and backward passes, N = 10⁵ (10⁴
+in D = 64); remblais with its default settings, against GeomLoss 0.3.1 with
+PyKeOps 2.3 in its best configuration (each PyKeOps kernel compiled alone in
+a fresh process), on an RTX 5090 and on 2 × AMD EPYC 9654 (192 threads).
+Speed-up of remblais (GeomLoss time / remblais time):
 
 ![Speed-up of remblais over GeomLoss 0.3.1 at N = 10⁵ (10⁴ in D = 64), on an RTX 5090 and on 2 × AMD EPYC 9654](docs/images/speedup-geomloss.svg)
 
-All the sizes measured:
-
-| Case | N = 10³ | N = 10⁴ | N = 10⁵ | N = 10⁶ |
-| --- | --- | --- | --- | --- |
-| multiscale, D = 2 | | × 2.0 | × 1.9 | × 1.8 |
-| multiscale, D = 3 | | × 2.4 | × 1.3 | × 1.15 |
-| online, D = 2 | × 2.6 | × 5.1 | × 2.1 | × 1.4 |
-| online, D = 3 | × 2.6 | × 5.6 | × 1.7 | × 1.2 |
-| online, D = 64 | × 4.8 | × 7.1 | × 2.6 | not measured |
-
-On the CPU (2 × AMD EPYC 9654, 192 threads), against GeomLoss on the CPU
-backend of PyKeOps:
-
-| Case | N = 10³ | N = 10⁴ | N = 10⁵ |
-| --- | --- | --- | --- |
-| multiscale, D = 2 | | × 1.3 | × 1.6 |
-| multiscale, D = 3 | | × 22 | × 13 |
-| online, D = 2 | × 2.4 | × 7.7 | × 10 |
-| online, D = 3 | × 2.4 | × 8.2 | × 11 |
-| online, D = 64 | × 2.7 | × 9.0 | not measured |
-
 These figures cover only the cases listed; they are not a general claim of
-superiority over GeomLoss on every workload or machine. The full tables and
-the protocol are on the [Performance](docs/performance.md) page.
+superiority over GeomLoss on every workload or machine. All the sizes, the
+times and the protocol are on the [Performance](docs/performance.md) page.
 
 ## Several GPUs or nodes
 
