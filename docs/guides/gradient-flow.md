@@ -46,7 +46,9 @@ for step in range(20):
 
 With `p=2` and a small blur, a step of `lr = 1` moves each point almost
 straight to its target: the loss collapses in a handful of steps. Smaller
-steps give a smoother trajectory.
+steps give a smoother trajectory, here with `lr = 0.25`:
+
+![A Sinkhorn gradient flow moves a blob of points onto a ring](../images/flow.svg)
 
 ## Comparing losses
 

@@ -3,6 +3,8 @@
 - The home page (docs/index.md) is README.md, with its links rewritten:
   ``docs/x.md`` becomes ``x.md`` and ``docs/images/`` becomes ``images/``.
 - Links to files outside docs/ (licenses, sources) point to GitHub.
+- A figure of tools/make_figures.py alone on its line (``![...](images/x.svg)``)
+  is inlined, so that its colours follow the light/dark toggle of the site.
 """
 
 import re
@@ -22,4 +24,16 @@ def on_page_markdown(markdown, page, config, **kwargs):
     # Links from docs/ to the sources: ../remblais/... -> GitHub
     markdown = re.sub(r"\(\.\./(remblais/[^)]*/)\)", lambda m: f"({TREE}{m.group(1)})", markdown)
     markdown = re.sub(r"\(\.\./(remblais/[^)]*)\)", lambda m: f"({BLOB}{m.group(1)})", markdown)
-    return markdown
+    return _inline_figures(markdown, config.docs_dir)
+
+
+_FIGURE = re.compile(r"^!\[[^\]]*\]\((?:\.\./)*images/([\w-]+\.svg)\)[ \t]*$", re.M)
+
+
+def _inline_figures(markdown, docs_dir):
+    def inline(m):
+        svg = (Path(docs_dir) / "images" / m.group(1)).read_text().strip()
+        if 'class="kxfig"' not in svg:
+            return m.group(0)
+        return f'<figure class="kxfig-wrap">\n{svg}\n</figure>'
+    return _FIGURE.sub(inline, markdown)

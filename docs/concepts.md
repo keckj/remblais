@@ -162,6 +162,8 @@ The default, `backend="auto"`, uses the rule of GeomLoss: `tensorized` when
 N · M ≤ 5000², `multiscale` for Sinkhorn with `p=2` in dimension 3 or less
 when N · M > 10⁴ · 10⁴, and `online` otherwise.
 
+![How backend="auto" chooses between tensorized, multiscale and online](images/backends.svg)
+
 ```python
 big_x = torch.rand(5_000, 2, device=device)
 big_y = torch.rand(5_000, 2, device=device)

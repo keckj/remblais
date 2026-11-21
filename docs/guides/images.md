@@ -66,6 +66,11 @@ barycenter = remblais.ImagesBarycenter(measures, weights)
 print(barycenter.shape)  # torch.Size([1, 1, 32, 32])
 ```
 
+With four shapes in the corners and bilinear weights, the barycenters morph
+one shape into the others:
+
+![Wasserstein barycenters of a disk, a ring, a square and a cross, computed with remblais](../images/barycenters.svg)
+
 `blur=0` (the default) means one pixel; `scaling_N` is the number of
 iterations per level of the image pyramid, and `backward_iterations` the
 number of final iterations that are differentiated when an input requires a

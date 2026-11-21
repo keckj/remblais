@@ -27,6 +27,9 @@ theme:
 hooks:
   - tools/mkdocs_hooks.py
 
+extra_css:
+  - stylesheets/figures.css
+
 plugins:
   - search
   - mkdocstrings:

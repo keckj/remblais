@@ -88,6 +88,11 @@ on the centroids, then skips the blocks of pairs that are too far apart. The
 default `backend="auto"` picks it for Sinkhorn with `p=2` when N · M is above
 10⁸.
 
+![The multiscale backend: clusters on a grid, coarse iterations on the centroids, kept blocks at the fine level](../images/multiscale.svg)
+
+In panel 2, a cluster of the blob only interacts with the clusters of the
+nearest arc of the ring: the other blocks of its row are skipped.
+
 ```python
 big_x = torch.rand(4_000, 2, device=device)
 big_y = torch.rand(4_000, 2, device=device) + 0.2

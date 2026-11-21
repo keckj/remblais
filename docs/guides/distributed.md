@@ -128,6 +128,11 @@ Strong scaling measured with `tools/bench_distributed.py`: debiased Sinkhorn
 divergence, p = 2, blur = 0.05, scaling = 0.5, D = 3, FP32, N = M, forward
 and backward passes (gradient with respect to `x`), in seconds.
 
+![Strong scaling of SamplesLoss(distributed=True): speed-up against the number of devices](../images/scaling.svg)
+
+Speed-up = time on one device / time on P devices; the times are in the
+tables below.
+
 AMD Instinct MI210, one process per GPU, 4 GPUs per node, RCCL:
 
 | Case | 1 GPU | 2 GPUs | 4 GPUs | 8 GPUs (2 nodes) | Speed-up at 8 |

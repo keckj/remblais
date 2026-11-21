@@ -14,6 +14,12 @@ built on [kernox](https://github.com/keckj/kernox) instead of PyKeOps: write
 also be split across several GPUs or nodes. Support for other architectures
 and accelerators may be added later.
 
+![A Sinkhorn gradient flow computed with remblais moves a blob of points onto a ring](docs/images/flow.svg)
+
+Images are measures too. Here, `ImagesBarycenter` computes the Wasserstein barycenters of four shapes:
+
+![Wasserstein barycenters of a disk, a ring, a square and a cross, computed with remblais](docs/images/barycenters.svg)
+
 - Documentation: <https://keckj.github.io/remblais/>
 - Getting started: <https://keckj.github.io/remblais/getting-started/>
 
@@ -78,6 +84,10 @@ Sinkhorn divergence, p = 2, FP32, forward and backward passes, on an RTX
 5090; remblais with its default settings, against GeomLoss 0.3.1 with PyKeOps
 2.3 in its best configuration (each PyKeOps kernel compiled alone in a fresh
 process). Speed-up of remblais (GeomLoss time / remblais time):
+
+![Speed-up of remblais over GeomLoss 0.3.1 at N = 10⁵ (10⁴ in D = 64), on an RTX 5090 and on 2 × AMD EPYC 9654](docs/images/speedup-geomloss.svg)
+
+All the sizes measured:
 
 | Case | N = 10³ | N = 10⁴ | N = 10⁵ | N = 10⁶ |
 | --- | --- | --- | --- | --- |

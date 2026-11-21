@@ -43,6 +43,8 @@ ratios are GeomLoss time / remblais time, above 1 when remblais is faster.
 To reproduce: `python tools/bench_geomloss.py` (GPU) or
 `python tools/bench_geomloss.py --device cpu --threads 192` (CPU).
 
+![Speed-up of remblais over GeomLoss 0.3.1 at N = 10⁵ (10⁴ in D = 64), on an RTX 5090 and on 2 × AMD EPYC 9654](images/speedup-geomloss.svg)
+
 ### RTX 5090
 
 PyTorch 2.11 (CUDA 12.8), kernox 1.1.0, remblais 2.1.0.
@@ -151,6 +153,23 @@ the like-for-like comparison.
 
 For N ≤ 10⁴, the FP32 value of remblais is within 9·10⁻¹⁰ to 1·10⁻⁷ (relative)
 of an FP64 reference, with or without fast math.
+
+### Multiscale in 2D and in 3D
+
+On the CPU, `multiscale` gains much less in D = 2 (× 1.3 to × 1.6) than in
+D = 3 (× 13 to × 22). The ε schedule explains it:
+
+![The ε schedule of the multiscale backend in 2D and 3D, against the size of the clusters](images/eps-schedule.svg)
+
+The default cell size is diameter / (√D · 2000^(1/D)): 0.024 in 2D but 0.084
+in 3D for these clouds. With blur = 0.05, every iteration in 2D stays above
+the cell size and runs on the centroids; only the final extrapolation touches
+the points. The time is then mostly fixed costs (clustering, small
+reductions, host overhead), which both libraries pay. In 3D, the last
+iterations run on the points, block by block, and take most of the time:
+this is where the block-sparse reductions of kernox are more than ten times
+faster than those of PyKeOps on the CPU. With a blur below the cell size, the
+fine iterations come back in 2D too.
 
 These figures cover only the cases listed; they are not a general claim of
 superiority over GeomLoss on every workload or machine. A case where remblais
