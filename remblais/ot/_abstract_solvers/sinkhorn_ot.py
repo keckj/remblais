@@ -93,44 +93,45 @@ def sinkhorn_loop(
         softmin (function): This routine must implement the (soft-)C-transform
             between dual vectors, which is the core computation for
             Auction- and Sinkhorn-like optimal transport solvers.
-            If `eps` is a float number, `log_b` encodes the logarithm of weights :math:`\beta_j`,
-            `C_xy` encodes a cost matrix :math:`C(x_i,y_j)`
-            and `g` encodes a dual potential :math:`g_j` that is supported by the points
-            :math:`y_j`'s, then `softmin(eps, log_b, C_xy, g)` must return a dual potential
-            `f` for ":math:`f_i`", supported by the :math:`x_i`'s, that is equal to:
+            If `eps` is a float number, `log_b` encodes the logarithm of weights $\beta_j$,
+            `C_xy` encodes a cost matrix $C(x_i,y_j)$
+            and `g` encodes a dual potential $g_j$ that is supported by the points
+            $y_j$'s, then `softmin(eps, log_b, C_xy, g)` must return a dual potential
+            `f` for "$f_i$", supported by the $x_i$'s, that is equal to:
 
-            .. math::
-                f_i \gets - \varepsilon \log \sum_{j=1}^{\text{M}} \beta_j \exp \tfrac{1}{\varepsilon}
-                \big[ g_j - C(x_i, y_j) \big]~.
+            $$
+            f_i \gets - \varepsilon \log \sum_{j=1}^{\text{M}} \beta_j \exp \tfrac{1}{\varepsilon}
+            \big[ g_j - C(x_i, y_j) \big]~.
+            $$
 
             For more detail, see e.g. Section 3.3 and Eq. (3.186) in Jean Feydy's PhD thesis.
 
         log_a_list (list of S real-valued Tensors): List of log-weights
-            :math:`\log(\alpha_i)` for the source measure, at different resolutions.
+            $\log(\alpha_i)$ for the source measure, at different resolutions.
 
         log_b_list (list of S real-valued Tensors): List of log-weights
-            :math:`\log(\beta_i)` for the target measure, at different resolutions.
+            $\log(\beta_i)$ for the target measure, at different resolutions.
 
         C_list (list of S CostMatrices): List of NamedTuples with attributes
             that represent the cost matrix at different scales.
             These will be passed to the `softmin` function as second arguments.
             We expect the attributes:
-            - `xx` for the cost matrix :math:`C_{xx}[i,j] = C(x[i], x[j])`.
-            - `yy` for the cost matrix :math:`C_{yy}[i,j] = C(y[i], y[j])`.
-            - `xy` for the cost matrix :math:`C_{xy}[i,j] = C(x[i], y[j])`.
-            - `yx` for the cost matrix :math:`C_{yx}[i,j] = C(y[i], x[j])`.
+            - `xx` for the cost matrix $C_{xx}[i,j] = C(x[i], x[j])$.
+            - `yy` for the cost matrix $C_{yy}[i,j] = C(y[i], y[j])$.
+            - `xy` for the cost matrix $C_{xy}[i,j] = C(x[i], y[j])$.
+            - `yx` for the cost matrix $C_{yx}[i,j] = C(y[i], x[j])$.
 
         descent (DescentParameters): A NamedTuple with attributes that describe
             the evolution of our main parameters along the iterations of the
             Sinkhorn loop.
             We expect the attributes:
             - eps_list (list of n_iter float > 0): List of successive values for
-              the Sinkhorn regularization parameter, the temperature :math:`\varepsilon`.
+              the Sinkhorn regularization parameter, the temperature $\varepsilon$.
               The number of iterations in the loop is equal to the length of this list.
 
             - rho_list (list of n_iter (float > 0 or None)): List of successive values for
               the strength of the marginal constraints in unbalanced OT.
-              None values stand for :math:`\rho = +\infty`, i.e. balanced OT.
+              None values stand for $\rho = +\infty$, i.e. balanced OT.
 
             - scale_list (list of n_iter int): List of scale indices at which we
               perform our iterations.
@@ -142,30 +143,30 @@ def sinkhorn_loop(
 
         extrapolate (function, optional): Coarse-to-fine extrapolation for the
             dual potentials. If
-            `self` is a dual potential that is supported by the :math:`x_i`'s,
-            `other` is a dual potential that is supported by the :math:`y_j`'s,
-            `log_weights` denotes the log-weights :math:`\log(\beta_j)`
-            that are supported by the :math:`y_j`'s at the coarse resolution,
-            `C` encodes the cost matrix :math:`C(x_i, y_j)` at the current
+            `self` is a dual potential that is supported by the $x_i$'s,
+            `other` is a dual potential that is supported by the $y_j$'s,
+            `log_weights` denotes the log-weights $\log(\beta_j)$
+            that are supported by the $y_j$'s at the coarse resolution,
+            `C` encodes the cost matrix $C(x_i, y_j)$ at the current
             ("coarse") resolution,
-            `C_fine` encodes the cost matrix :math:`C(x_i, y_j)` at the next
+            `C_fine` encodes the cost matrix $C(x_i, y_j)$ at the next
             ("fine") resolution,
-            `eps` is the current value of the temperature :math:`\varepsilon`,
+            `eps` is the current value of the temperature $\varepsilon$,
             `dampen` is a pointwise dampening function for unbalanced OT,
             then
             `extrapolate(self, other, log_weights, C, C_fine, eps, dampen)`
             will be used to compute the new values of the dual potential
-            `self` on the point cloud :math:`x_i` at a finer resolution.
+            `self` on the point cloud $x_i$ at a finer resolution.
             This function may either use a simple bi/tri-linear interpolation
             method on the first potential (`self`), or rely on the analytic
             expression of the dual potential that is induced by the
-            :math:`y_j`'s and :math:`\beta_j`'s.
+            $y_j$'s and $\beta_j$'s.
             Defaults to None: this function is not needed in single-scale mode.
 
         debias (bool, optional): Should we used the "de-biased" Sinkhorn divergence
-            :math:`\text{S}_{\varepsilon, \rho}(\al,\be)` instead
+            $\text{S}_{\varepsilon, \rho}(\al,\be)$ instead
             of the "raw" entropic OT cost
-            :math:`\text{OT}_{\varepsilon, \rho}(\al,\be)`?
+            $\text{OT}_{\varepsilon, \rho}(\al,\be)$?
             This slows down the OT solver by a factor 2, but guarantees that
             our approximation of the Wasserstein distance will be positive and definite
             - up to convergence of the Sinkhorn loop.

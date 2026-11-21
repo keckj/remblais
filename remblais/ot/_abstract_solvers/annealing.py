@@ -57,10 +57,10 @@ def annealing_parameters(
     r"""Turns high-level arguments into numerical values for the Sinkhorn loop.
 
     We use an aggressive strategy with an exponential cooling
-    schedule: starting from a value of :math:`\text{diameter}^p`,
+    schedule: starting from a value of $\text{diameter}^p$,
     the temperature epsilon is divided
-    by :math:`\text{scaling}^p` at every iteration until reaching
-    a minimum value of :math:`\text{blur}^p`.
+    by $\text{scaling}^p$ at every iteration until reaching
+    a minimum value of $\text{blur}^p$.
 
     The number of iterations can be specified in two different ways, using either
     an integer number (n_iter) or a ratio between successive scales (scaling).
@@ -73,7 +73,7 @@ def annealing_parameters(
 
         eps (float > 0): Target value for the
             temperature (= entropic regularization parameter)
-            ":math:`\varepsilon`".
+            "$\varepsilon$".
 
         rho (float > 0 or None): Strength of the marginal constraints.
             None stands for +infinity, i.e. balanced optimal transport.
@@ -100,13 +100,13 @@ def annealing_parameters(
             We return the attributes:
 
             - eps_list (list of n_iter float > 0): List of successive values for
-              the Sinkhorn regularization parameter, the temperature :math:`\varepsilon`.
+              the Sinkhorn regularization parameter, the temperature $\varepsilon$.
               At every iteration, the temperature is equal to blur**p.
               The number of iterations in the loop is equal to the length of this list.
 
             - rho_list (list of n_iter (float > 0 or None)): List of successive values for
               the strength of the marginal constraints in unbalanced OT.
-              None values stand for :math:`\rho = +\infty`, i.e. balanced OT.
+              None values stand for $\rho = +\infty$, i.e. balanced OT.
 
             - scale_list (list of n_iter int): List of scale indices at which we
               perform our iterations.

@@ -2,7 +2,7 @@
 
 Functional equivalents of ``pykeops.torch.cluster`` (``grid_cluster``,
 ``cluster_ranges_centroids``, ``sort_clusters``, ``from_matrix``), rewritten in
-Torch; the ranges are built by :func:`kernox.ranges_from_labels`.
+Torch; the ranges are built by `kernox.ranges_from_labels`.
 """
 
 import math

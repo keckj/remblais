@@ -41,20 +41,20 @@ def sinkhorn_cost(
     dimension (=1) in front of your measure weights and dual potentials.
 
     Args:
-        a ((B,...) real-valued Tensor >= 0): Weights for the "source" measure on the points :math:`x_i`.
-        b ((B,...) real-valued Tensor >= 0): Weights for the "target" measure on the points :math:`y_j`.
+        a ((B,...) real-valued Tensor >= 0): Weights for the "source" measure on the points $x_i$.
+        b ((B,...) real-valued Tensor >= 0): Weights for the "target" measure on the points $y_j$.
         potentials (SinkhornPotentials): A NamedTuple that contains the solutions
            of a (dual) regularized optimal transport problem.
            We expect the attributes:
             - f_aa ((B,...) real-valued Tensor or None): Dual potential for the "a <-> a" problem.
             - g_bb ((B,...) real-valued Tensor or None): Dual potential for the "b <-> b" problem.
-            - g_ab ((B,...) real-valued Tensor)): Dual potential supported by :math:`y_j`
+            - g_ab ((B,...) real-valued Tensor)): Dual potential supported by $y_j$
               for the "a <-> b" problem.
-            - f_ba ((B,...) real-valued Tensor): Dual potential supported by :math:`x_i`
+            - f_ba ((B,...) real-valued Tensor): Dual potential supported by $x_i$
               for the "a <-> a" problem.
 
         eps (float): Target (i.e. final) temperature.
-        rho (float or None (:math:`+\infty`)): Strength of the marginal constraints.
+        rho (float or None ($+\infty$)): Strength of the marginal constraints.
         debias (bool, optional): Do we compute the "debiased" Sinkhorn divergence
             instead of the "raw" entropic transport cost?
             Defaults to True.

@@ -217,7 +217,7 @@ def lse2(cost, x, q, r, y, ha, hb, s):
 
 
 def lse2dot_plan(D, dtype, backend):
-    """Dot-product variant of :func:`lse2_plan` for ½‖x − y‖²:
+    """Dot-product variant of `lse2_plan` for ½‖x − y‖²:
     ``log Σ_j exp(q_i·a_j + r_i·b_j + s⟨x_i, y_j⟩)`` (the norms go into a, b and the output)."""
 
     def build():
@@ -305,7 +305,7 @@ def lse(cost, x, y, h, inv_eps, ranges=None):
 
 
 def lse_full(cost, x, y, h, s):
-    """Like :func:`lse`, with the **full** parameter ``s`` (``cost.factor/ε``, a number or a (1,) tensor)."""
+    """Like `lse`, with the **full** parameter ``s`` (``cost.factor/ε``, a number or a (1,) tensor)."""
     run = lse_plan(cost, x.shape[-1], dtype_name(x), backend_for(x.device))
     return _call(run, None, x=x, y=y, h=h.unsqueeze(-1), s=s).squeeze(-1)
 
@@ -318,6 +318,6 @@ def kernel_product(kernel, x, y, b, inv_blur, ranges=None):
 
 
 def swap_axes(ranges):
-    """Swaps the i and j roles of a complete :class:`kernox.Ranges`."""
+    """Swaps the i and j roles of a complete `kernox.Ranges`."""
     return kp.Ranges(ranges.ranges_j, ranges.slices_j, ranges.redranges_i,
                      ranges.ranges_i, ranges.slices_i, ranges.redranges_j)

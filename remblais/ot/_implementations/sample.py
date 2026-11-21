@@ -222,7 +222,7 @@ def solve_sample(
         The interface of this solver is still in development and may change in future releases.
         We welcome any feedback and suggestions for improvement.
 
-    Using the notations of the documentation of :func:`~geomloss.ot.solve`, this function focuses on the case
+    Using the notations of the documentation of `solve`, this function focuses on the case
     where the values of the cost matrix $C_{ij} = C(x_i, y_j)$ are not provided as input, but are instead computed on the fly from the coordinates of the samples $x_i$ (stored in the array **X_a**) and $y_j$ (stored in the array **X_b**).
     This is the most common setting in geometric applications, where the cost is typically a power of the Euclidean distance between the points.
 
@@ -251,7 +251,7 @@ def solve_sample(
 
     Notes
     -----
-    **Other parameters** are identical to those of :func:`~geomloss.ot.solve` and control the regularization strength, the unbalanced OT penalty type and strength, the optimization method and parameters, etc. See the documentation of :func:`~geomloss.ot.solve` for more details.
+    **Other parameters** are identical to those of `solve` and control the regularization strength, the unbalanced OT penalty type and strength, the optimization method and parameters, etc. See the documentation of `solve` for more details.
 
     Examples
     --------
@@ -514,18 +514,18 @@ class OTResultSample(OTResult):
     def _density(self):
         r"""Density $P_{ij}$ of the transport plan with respect to the reference product measure $\alpha \otimes \beta$.
 
-        Using the notations of the documentation of :func:`~geomloss.ot.solve`, we have:
+        Using the notations of the documentation of `solve`, we have:
 
-        .. math::
-
-            P_{ij} = \exp\left( \frac{f_i + g_j - C(x_i, y_j)}{\varepsilon} \right)~,
+        $$
+        P_{ij} = \exp\left( \frac{f_i + g_j - C(x_i, y_j)}{\varepsilon} \right)~,
+        $$
 
         where $f$ and $g$ are the dual potentials of the optimal transport problem, $C$ is the cost function and $\varepsilon$ is the regularization strength.
 
         Returns
         -------
         (N,M) array-like >= 0
-            If this solution was computed with :func:`~geomloss.ot.solve_sample`, the density is returned as a :mod:`(N,M)` array.
+            If this solution was computed with `solve_sample`, the density is returned as a `(N,M)` array.
         """
         # N.B.: We may catch out-of-memory errors and suggest
         # the use of lazy_plan or sparse_plan when appropriate.
@@ -564,7 +564,7 @@ class OTResultSample(OTResult):
         return self.cast(P_ij, "C")
 
     def _lazy_density(self):
-        """Density of the transport plan, encoded as a symbolic KeOps :class:`LazyTensor`."""
+        """Density of the transport plan, encoded as a symbolic KeOps `LazyTensor`."""
         if self._C_lazy is None:
             return None
         else:
@@ -593,7 +593,7 @@ class OTResultSample(OTResult):
             return P_ij
 
     def _density_operator(self):
-        """Density of the transport plan, encoded as a :mod:`LinearOperator`."""
+        """Density of the transport plan, encoded as a `LinearOperator`."""
         if self.lazy_density is not None:
             return LinearOperator.from_lazy_tensor(
                 self.lazy_density,
@@ -623,7 +623,7 @@ class OTResultSample(OTResult):
         return self.cast(P_ij, "C")
 
     def _lazy_plan(self):
-        """Transport plan, encoded as a symbolic KeOps :class:`LazyTensor`."""
+        """Transport plan, encoded as a symbolic KeOps `LazyTensor`."""
         if self._C_lazy is None:
             return None
 

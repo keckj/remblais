@@ -11,7 +11,7 @@ A custom cost can be given:
   ``tensorized`` and ``multiscale`` backends;
 - with ``backend="tensorized"``, as a Python function on tensors returning the
   (B, N, M) cost matrix (GeomLoss semantics);
-- as a :class:`remblais.Cost`.
+- as a `remblais.Cost`.
 
 KeOps formula strings (``"Norm2(X-Y)"``) are not supported: write the cost as
 a kernox formula instead, e.g. ``lambda x, y: (x - y).norm2()``.
@@ -30,7 +30,7 @@ def _formula_only(fn):
 
 
 def resolve_cost(cost, p, backend):
-    """Normalizes the ``cost`` argument of SamplesLoss into a :class:`Cost`."""
+    """Normalizes the ``cost`` argument of SamplesLoss into a `Cost`."""
     if isinstance(cost, Cost):
         return cost
     if cost is None:

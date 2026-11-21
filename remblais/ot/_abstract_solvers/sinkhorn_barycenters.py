@@ -135,19 +135,20 @@ def sinkhorn_barycenter_loop(
         softmin (function): This routine must implement the (soft-)C-transform
             between dual vectors, which is the core computation for
             Auction- and Sinkhorn-like optimal transport solvers.
-            If `eps` is a float number, `C_xy` encodes a cost matrix :math:`C(x_i,y_j)`
-            and `g` encodes a dual potential :math:`g_j` that is supported by the points
-            :math:`y_j`'s, then `softmin(eps, C_xy, g)` must return a dual potential
-            `f` for ":math:`f_i`", supported by the :math:`x_i`'s, that is equal to:
+            If `eps` is a float number, `C_xy` encodes a cost matrix $C(x_i,y_j)$
+            and `g` encodes a dual potential $g_j$ that is supported by the points
+            $y_j$'s, then `softmin(eps, C_xy, g)` must return a dual potential
+            `f` for "$f_i$", supported by the $x_i$'s, that is equal to:
 
-            .. math::
-                f_i \gets - \varepsilon \log \sum_{j=1}^{\text{M}} \exp
-                \big[ g_j - C(x_i, y_j) / \varepsilon \big]~.
+            $$
+            f_i \gets - \varepsilon \log \sum_{j=1}^{\text{M}} \exp
+            \big[ g_j - C(x_i, y_j) / \varepsilon \big]~.
+            $$
 
             For more detail, see e.g. Section 3.3 and Eq. (3.186) in Jean Feydy's PhD thesis.
 
         log_b_k_list (list of S real-valued Tensors of shape (B,K,...)):
-            List of log-weights :math:`\log(\beta^k_i)` for the target measure,
+            List of log-weights $\log(\beta^k_i)$ for the target measure,
             at S different scales (from coarse to fine).
 
         w_k ((B,K) Tensor): desired weights for the barycentric interpolation.
@@ -156,10 +157,10 @@ def sinkhorn_barycenter_loop(
             that represent the cost matrix at S different scales.
             These will be passed to the `softmin` function as second arguments.
             We expect the attributes:
-            - `xx` for the cost matrix :math:`C_{xx}[i,j] = C(x[i], x[j])`.
-            - `yy` for the cost matrix :math:`C_{yy}[i,j] = C(y[i], y[j])`.
-            - `xy` for the cost matrix :math:`C_{xy}[i,j] = C(x[i], y[j])`.
-            - `yx` for the cost matrix :math:`C_{yx}[i,j] = C(y[i], x[j])`.
+            - `xx` for the cost matrix $C_{xx}[i,j] = C(x[i], x[j])$.
+            - `yy` for the cost matrix $C_{yy}[i,j] = C(y[i], y[j])$.
+            - `xy` for the cost matrix $C_{xy}[i,j] = C(x[i], y[j])$.
+            - `yx` for the cost matrix $C_{yx}[i,j] = C(y[i], x[j])$.
             Where x[i] denotes the positions of the samples for the barycenter(s),
             and y[j] denotes the positions of the samples for the input measures.
 
@@ -168,7 +169,7 @@ def sinkhorn_barycenter_loop(
             Sinkhorn loop.
             We expect the attributes:
             - eps_list (list of n_iter float > 0): List of successive values for
-              the Sinkhorn regularization parameter, the temperature :math:`\varepsilon`.
+              the Sinkhorn regularization parameter, the temperature $\varepsilon$.
               The number of iterations in the loop is equal to the length of this list
               + the number of "backward_iterations".
 
@@ -179,24 +180,24 @@ def sinkhorn_barycenter_loop(
 
         extrapolate (function, optional): Coarse-to-fine extrapolation for the
             dual potentials. If
-            `self` is a dual potential that is supported by the :math:`x_i`'s,
-            `other` is a dual potential that is supported by the :math:`y_j`'s,
-            `log_weights` denotes the log-weights :math:`\log(\beta_j)`
-            that are supported by the :math:`y_j`'s at the coarse resolution,
-            `C` encodes the cost matrix :math:`C(x_i, y_j)` at the current
+            `self` is a dual potential that is supported by the $x_i$'s,
+            `other` is a dual potential that is supported by the $y_j$'s,
+            `log_weights` denotes the log-weights $\log(\beta_j)$
+            that are supported by the $y_j$'s at the coarse resolution,
+            `C` encodes the cost matrix $C(x_i, y_j)$ at the current
             ("coarse") resolution,
-            `C_fine` encodes the cost matrix :math:`C(x_i, y_j)` at the next
+            `C_fine` encodes the cost matrix $C(x_i, y_j)$ at the next
             ("fine") resolution,
-            `eps` is the current value of the temperature :math:`\varepsilon`,
+            `eps` is the current value of the temperature $\varepsilon$,
             `dampen` is a pointwise dampening function for unbalanced OT,
             then
             `extrapolate(self, other, log_weights, C, C_fine, eps, dampen)`
             will be used to compute the new values of the dual potential
-            `self` on the point cloud :math:`x_i` at a finer resolution.
+            `self` on the point cloud $x_i$ at a finer resolution.
             This function may either use a simple bi/tri-linear interpolation
             method on the first potential (`self`), or rely on the analytic
             expression of the dual potential that is induced by the
-            :math:`y_j`'s and :math:`\beta_j`'s.
+            $y_j$'s and $\beta_j$'s.
             Defaults to None: this function is not needed in single-scale mode.
 
         backward_iterations (int, optional): Number of extra iterations,

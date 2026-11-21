@@ -30,6 +30,10 @@ hooks:
 extra_css:
   - stylesheets/figures.css
 
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
+
 plugins:
   - search
   - mkdocstrings:
@@ -49,6 +53,7 @@ markdown_extensions:
   - toc: {permalink: true}
   - pymdownx.highlight
   - pymdownx.superfences
+  - pymdownx.arithmatex: {generic: true}
   - pymdownx.snippets: {base_path: ["."], check_paths: true}
 
 nav:

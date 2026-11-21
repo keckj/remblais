@@ -52,12 +52,12 @@ class LinearOperator:
 
     @property
     def T(self):
-        """Alias for :meth:`transpose` ."""
+        """Alias for `transpose` ."""
         return self.transpose()
 
     @classmethod
     def from_dense(cls, dense_matrix, *, input_shape, output_shape):
-        """Returns a :class:`LinearOperator` that behaves like the given dense matrix."""
+        """Returns a `LinearOperator` that behaves like the given dense matrix."""
         if len(dense_matrix.shape) == 2:
             N, M = dense_matrix.shape
             assert input_shape == (M,)
@@ -103,7 +103,7 @@ class LinearOperator:
 
     @classmethod
     def from_lazy_tensor(cls, lazy_tensor, *, input_shape, output_shape):
-        """Returns a :class:`LinearOperator` that behaves like the given KeOps :class:`LazyTensor`."""
+        """Returns a `LinearOperator` that behaves like the given KeOps `LazyTensor`."""
         if len(lazy_tensor.shape) == 2:
             N, M = lazy_tensor.shape
             assert input_shape == (M,)
@@ -132,7 +132,7 @@ class LinearOperator:
         )
 
     def rescale(self, *, input_scaling, output_scaling):
-        """Returns a new :class:`LinearOperator` that behaves like the original one, but with rescaled inputs and outputs."""
+        """Returns a new `LinearOperator` that behaves like the original one, but with rescaled inputs and outputs."""
         b = input_scaling
         a = output_scaling
 
@@ -348,7 +348,7 @@ class OTResult:
         return None
 
     def _lazy_plan(self):
-        """Transport plan, encoded as a symbolic KeOps :mod:`LazyTensor`."""
+        """Transport plan, encoded as a symbolic KeOps `LazyTensor`."""
         return None
 
     def _plan_operator(self):

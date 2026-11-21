@@ -64,14 +64,14 @@ DOT_MIN_DIM = int(os.environ.get("REMBLAIS_DOT_MIN_DIM", 10**9))
 def sinkhorn_loop_paired(cost, a_log, b_log, x, y, eps_list, rho, dot=False, debias=True):
     """Debiased Sinkhorn loop with two kernox reductions per iteration (instead of four).
 
-    Same algorithm as :func:`sinkhorn_loop` (same updates, same order, same final
+    Same algorithm as `sinkhorn_loop` (same updates, same order, same final
     extrapolation): the softmins that share their j set are fused into one
     reduction over concatenated rows,
 
     - A: rows [x ; y], j = y: (f_ba, g_bb);
     - B: rows [y ; x], j = x: (g_ab, f_aa);
 
-    each row selecting exactly its own scores (see :func:`_kp.lse2`). The
+    each row selecting exactly its own scores (see `_kp.lse2`). The
     potentials are kept concatenated: P_A = [f_ba ; g_bb], P_B = [g_ab ; f_aa].
     x, y: (…, N, D), (…, M, D); a_log, b_log: (…, N), (…, M).
 
@@ -244,7 +244,7 @@ def _graph_iterations(cost, ws, consts):
 
 
 def _run_iterations(cost, ws, consts):
-    """Gradient-free iterations of :func:`sinkhorn_loop_paired`; returns (P_A, P_B)."""
+    """Gradient-free iterations of `sinkhorn_loop_paired`; returns (P_A, P_B)."""
     from .sinkhorn_divergence import dampening
 
     N, M, eps_list, rho, dot, debias = consts

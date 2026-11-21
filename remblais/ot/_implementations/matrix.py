@@ -191,19 +191,19 @@ class OTResultMatrix(OTResult):
     def _density(self):
         r"""Density $P_{ij}$ of the transport plan with respect to the reference product measure $\alpha \otimes \beta$.
 
-        Using the notations of the documentation of :func:`~geomloss.ot.solve`, we have:
+        Using the notations of the documentation of `solve`, we have:
 
-        .. math::
-
-            P_{ij} = \exp\left( \frac{f_i + g_j - C_{ij}}{\varepsilon} \right)~,
+        $$
+        P_{ij} = \exp\left( \frac{f_i + g_j - C_{ij}}{\varepsilon} \right)~,
+        $$
 
         where $f$ and $g$ are the dual potentials of the optimal transport problem, $C$ is the cost matrix and $\varepsilon$ is the regularization strength.
 
         Returns
         -------
         (N,M) or (B,N,M) array-like >= 0
-            If this solution was computed with :func:`~geomloss.ot.solve`, the density is returned as a :mod:`(N,M)` array.
-            If this solution was computed with :func:`~geomloss.ot.solve_batch`, the density is returned as a :mod:`(B,N,M)` array, where B is the batch size.
+            If this solution was computed with `solve`, the density is returned as a `(N,M)` array.
+            If this solution was computed with `solve_batch`, the density is returned as a `(B,N,M)` array, where B is the batch size.
         """
         # Load the relevant quantities:
         f = self._potentials.f_ba  # (B, N)
@@ -225,16 +225,16 @@ class OTResultMatrix(OTResult):
         return self.cast(D_ij, "C")  # Cast as a (N,M) or (B,N,M) Tensor
 
     def _density_operator(self):
-        r"""Linear operator associated to :attr:`density`.
+        r"""Linear operator associated to `density`.
 
         Returns
         -------
         LinearOperator
-            If this solution was computed with :func:`~geomloss.ot.solve`, the returned operator can be applied to
-            arrays of shape :mod:`(M,...)` to produce arrays of shape :mod:`(N,...)`.
+            If this solution was computed with `solve`, the returned operator can be applied to
+            arrays of shape `(M,...)` to produce arrays of shape `(N,...)`.
 
-            If this solution was computed with :func:`~geomloss.ot.solve_batch`, the returned operator can be applied to
-            arrays of shape :mod:`(B,M,...)` to produce arrays of shape :mod:`(B,N,...)`.
+            If this solution was computed with `solve_batch`, the returned operator can be applied to
+            arrays of shape `(B,M,...)` to produce arrays of shape `(B,N,...)`.
 
         """
         return LinearOperator.from_dense(
@@ -246,19 +246,19 @@ class OTResultMatrix(OTResult):
     def _plan(self):
         r"""Optimal transport plan $\pi_{ij}$.
 
-        Using the notations of the documentation of :func:`~geomloss.ot.solve`, we have:
+        Using the notations of the documentation of `solve`, we have:
 
-        .. math::
-
-            \pi_{ij} = \alpha_i \beta_j \cdot \exp\left( \frac{f_i + g_j - C_{ij}}{\varepsilon} \right)~,
+        $$
+        \pi_{ij} = \alpha_i \beta_j \cdot \exp\left( \frac{f_i + g_j - C_{ij}}{\varepsilon} \right)~,
+        $$
 
         where $f$ and $g$ are the dual potentials of the optimal transport problem, $C$ is the cost matrix and $\varepsilon$ is the regularization strength.
 
         Returns
         -------
         (N,M) or (B,N,M) array-like >= 0
-            If this solution was computed with :func:`~geomloss.ot.solve`, the plan is returned as a :mod:`(N,M)` array.
-            If this solution was computed with :func:`~geomloss.ot.solve_batch`, the plan is returned as a :mod:`(B,N,M)` array, where B is the batch size.
+            If this solution was computed with `solve`, the plan is returned as a `(N,M)` array.
+            If this solution was computed with `solve_batch`, the plan is returned as a `(B,N,M)` array, where B is the batch size.
         """
 
         # Load the relevant quantities:
@@ -293,7 +293,7 @@ class OTResultMatrix(OTResult):
         return self.cast(plan, "C")  # Cast as a (N,M) or (B,N,M) Tensor
 
     def _plan_operator(self):
-        r"""Linear operator associated to :attr:`plan`.
+        r"""Linear operator associated to `plan`.
 
         Example
         -------
@@ -331,11 +331,11 @@ class OTResultMatrix(OTResult):
         Returns
         -------
         LinearOperator
-            If this solution was computed with :func:`~geomloss.ot.solve`, the returned operator can be applied to
-            arrays of shape :mod:`(M,...)` to produce arrays of shape :mod:`(N,...)`.
+            If this solution was computed with `solve`, the returned operator can be applied to
+            arrays of shape `(M,...)` to produce arrays of shape `(N,...)`.
 
-            If this solution was computed with :func:`~geomloss.ot.solve_batch`, the returned operator can be applied to
-            arrays of shape :mod:`(B,M,...)` to produce arrays of shape :mod:`(B,N,...)`.
+            If this solution was computed with `solve_batch`, the returned operator can be applied to
+            arrays of shape `(B,M,...)` to produce arrays of shape `(B,N,...)`.
 
         """
         return super()._plan_operator()
@@ -383,12 +383,12 @@ def solve(
     $\text{OT}_{\varepsilon, \rho}(\alpha, \beta)$
     reads:
 
-    .. math::
-
-        \min_{\pi \in \mathbb{R}_+^{N \times M}} \sum_{i=1}^N \sum_{j=1}^M C_{ij} \pi_{ij}
-        + \varepsilon \text{KL}(\pi, \alpha \otimes \beta)
-        + \text{D}_\rho(\pi 1_M, \alpha)
-        + \text{D}_\rho(\pi^\top 1_N, \beta)~,
+    $$
+    \min_{\pi \in \mathbb{R}_+^{N \times M}} \sum_{i=1}^N \sum_{j=1}^M C_{ij} \pi_{ij}
+    + \varepsilon \text{KL}(\pi, \alpha \otimes \beta)
+    + \text{D}_\rho(\pi 1_M, \alpha)
+    + \text{D}_\rho(\pi^\top 1_N, \beta)~,
+    $$
 
     where:
 
@@ -396,9 +396,9 @@ def solve(
     - $\varepsilon > 0$ is the **regularization strength** or **temperature**.
     - $\text{KL}(\pi, \alpha \otimes \beta)$ is the **relative entropy** of $\pi$ with respect to the reference product measure $\alpha \otimes \beta$:
     
-    .. math::
-
-        \text{KL}(\pi, \alpha \otimes \beta) = \sum_{i=1}^N \sum_{j=1}^M \pi_{ij} \log\left( \frac{\pi_{ij}}{\alpha_i \beta_j} \right) - \pi_{ij} + \alpha_i \beta_j~.
+    $$
+    \text{KL}(\pi, \alpha \otimes \beta) = \sum_{i=1}^N \sum_{j=1}^M \pi_{ij} \log\left( \frac{\pi_{ij}}{\alpha_i \beta_j} \right) - \pi_{ij} + \alpha_i \beta_j~.
+    $$
 
     - $\text{D}_\rho$ is a penalty on the **marginal constraints**, weighted by a positive parameter $\rho$.
       
@@ -410,10 +410,12 @@ def solve(
         which allows for partial transport of the source measure $\alpha$ onto the target $\beta$.
         Currently, we only support the Kullback-Leibler divergence as unbalanced OT penalty, in which case we have:
 
-    .. math::
-
-        \text{D}_\rho(\pi 1_M, \alpha) = \rho \cdot \text{KL}(\pi 1_M, \alpha)~,~ \\
-        \text{D}_\rho(\pi^\top 1_N, \beta) = \rho \cdot \text{KL}(\pi^\top 1_N, \beta)~.
+    $$
+    \begin{aligned}
+    \text{D}_\rho(\pi 1_M, \alpha) = \rho \cdot \text{KL}(\pi 1_M, \alpha)~,~ \\
+    \text{D}_\rho(\pi^\top 1_N, \beta) = \rho \cdot \text{KL}(\pi^\top 1_N, \beta)~.
+    \end{aligned}
+    $$
 
     Parameters
     ----------
@@ -434,21 +436,21 @@ def solve(
         i.e. $\beta_j = 1/M$ for all $j$.
     unbalanced: float > 0 or None, default: None
         Scaling factor $\rho$ for the **unbalanced OT penalty** on the marginal constraints.
-        If unbalanced is :mod:`None`, we solve the balanced OT problem
+        If unbalanced is `None`, we solve the balanced OT problem
         and look for a full transport of the source marginal $\alpha$ onto the target $\beta$.
-        If unbalanced is a positive :mod:`float` $\rho > 0$, we solve an unbalanced OT problem where the marginal constraints are relaxed and penalized with a soft penalty parameterized by $\rho$.
+        If unbalanced is a positive `float` $\rho > 0$, we solve an unbalanced OT problem where the marginal constraints are relaxed and penalized with a soft penalty parameterized by $\rho$.
     unbalanced_type:
-        Type of unbalanced OT penalty to use when unbalanced is not :mod:`None`.
+        Type of unbalanced OT penalty to use when unbalanced is not `None`.
         Currently, we only support the Kullback-Leibler divergence ``"KL"``, also known as the relative entropy.
     method:
         Optimization method to use. Currently, we only support the symmetrized Sinkhorn algorithm
         with annealing, which is activated by the keyword ``"auto"``.
     max_iter: int > 0 or None, default: None
         Maximum **number of iterations** for the optimization algorithm.
-        If :mod:`None`, the algorithm runs until convergence.
+        If `None`, the algorithm runs until convergence.
     tol: float > 0 or None, default: None
         **Tolerance** for convergence.
-        If :mod:`None`, we use a default tolerance based on the
+        If `None`, we use a default tolerance based on the
         regularization strength $\varepsilon$ and the scale of the cost matrix $C$.
 
     Returns
@@ -538,7 +540,7 @@ def solve_batch(
     max_iter=None,
     tol=None,
 ):
-    r"""Batched version of :func:`~geomloss.ot.solve`, which can solve multiple OT problems in parallel.
+    r"""Batched version of `solve`, which can solve multiple OT problems in parallel.
 
     .. warning::
         The interface of this solver is still in development and may change in future releases.
@@ -561,7 +563,7 @@ def solve_batch(
 
     Notes
     -----
-    **Other parameters** are identical to those of :func:`~geomloss.ot.solve`.
+    **Other parameters** are identical to those of `solve`.
     They are applied uniformly to all problems in the batch.
 
     Returns
