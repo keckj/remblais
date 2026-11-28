@@ -1,8 +1,9 @@
-# remblais
-
-<p align="center">
-  <img src="docs/images/remblais-banner.png" alt="remblais logo" width="560">
-</p>
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo-dark.svg">
+    <img alt="remblais" src="docs/logo.svg" width="760">
+  </picture>
+</h1>
 
 remblais computes geometric losses between measures on NVIDIA (CUDA), AMD
 (ROCm/HIP) and Intel (SYCL) GPUs, and on x86-64 CPUs: Sinkhorn divergences (entropic optimal
@@ -13,6 +14,11 @@ built on [kernox](https://github.com/keckj/kernox) instead of PyKeOps: write
 `import remblais as geomloss` and your code runs unchanged. A large loss can
 also be split across several GPUs or nodes. Support for other architectures
 and accelerators may be added later.
+
+remblais is the twin of [deblais](https://github.com/keckj/deblais), which
+computes exact optimal transport (sparse optimal plans, exact costs and dual
+certificates):
+[which one do I need?](#remblais-and-deblais)
 
 - Documentation: <https://keckj.github.io/remblais/>
 - Getting started: <https://keckj.github.io/remblais/getting-started/>
@@ -133,13 +139,32 @@ it step by step, with [all the measurements](docs/guides/distributed.md#scaling)
 and when splitting pays. Batch scripts for SLURM and OAR, and
 troubleshooting: [Running on a cluster](https://keckj.github.io/kernox/guides/cluster/).
 
-## About the name and logo
+## remblais and deblais
+
+remblais and [deblais](https://github.com/keckj/deblais) are twin projects:
+two solvers for the two ways of computing discrete-discrete optimal transport.
+
+| | **remblais** | **[deblais](https://github.com/keckj/deblais)** |
+| --- | --- | --- |
+| Problem | entropic transport: Sinkhorn divergences, kernel norms (MMD), Hausdorff | exact optimal transport |
+| Algorithm | Sinkhorn iterations | network simplex, domain decomposition |
+| Result | a smooth loss, with a blur that trades accuracy for speed | optimal sparse plan, exact cost, certificate |
+| Runs on | NVIDIA, AMD and Intel GPUs, several GPUs or nodes, CPUs | CPUs |
+| Interface | PyTorch, drop-in replacement of GeomLoss | C++17 headers, NumPy, PyTorch |
+
+Take remblais for a loss to minimize, for other costs, unbalanced measures,
+images and volumes; take deblais for a plan, an assignment or a reference
+value. The page [remblais and deblais](docs/deblais.md) compares them in
+detail and shows how to use them together.
+
+## About the name
 
 In 1781, Gaspard Monge asked how to move a pile of earth, the *déblais*, into
 a hole of the same volume, the *remblais*, at the lowest cost: the founding
-problem of optimal transport. remblais is where the mass ends up. The logo
-shows the ox of symox and kernox, harnessed this time to a scraper, carrying
-the déblais to the remblais: Monge's optimal transport.
+problem of optimal transport. remblais is where the mass ends up, and
+[deblais](https://github.com/keckj/deblais) is where it comes from. The two
+logos tell it: the grains leave the first letter of deblais and settle into
+the first letter of remblais.
 
 ## License
 
@@ -149,6 +174,9 @@ and notice are in [`THIRD_PARTY.md`](THIRD_PARTY.md).
 
 ## Related projects
 
+- deblais, the twin project: exact optimal transport (network simplex, sparse
+  optimal plans and dual certificates) on CPUs, as a header-only C++ library
+  for NumPy and PyTorch: <https://github.com/keckj/deblais>
 - GeomLoss, the original library: <https://github.com/jeanfeydy/geomloss>
 - kernox, fused GPU and CPU reductions: <https://github.com/keckj/kernox>
 - symox, symbolic engine and code generation: <https://github.com/keckj/symox>

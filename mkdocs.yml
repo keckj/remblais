@@ -7,6 +7,7 @@ copyright: remblais is dual-licensed MIT or Apache-2.0
 
 theme:
   name: material
+  favicon: favicon.svg
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -69,6 +70,7 @@ nav:
       - The ot API: guides/ot.md
       - Several GPUs or nodes: guides/distributed.md
   - Coming from GeomLoss: geomloss.md
+  - remblais and deblais: deblais.md
   - Performance: performance.md
   - API reference: reference.md
   - References: references.md

@@ -1,7 +1,8 @@
 """MkDocs hooks for the remblais site.
 
 - The home page (docs/index.md) is README.md, with its links rewritten:
-  ``docs/x.md`` becomes ``x.md`` and ``docs/images/`` becomes ``images/``.
+  ``docs/x.md`` becomes ``x.md`` and ``docs/images/`` becomes ``images/``; the
+  light and dark logos of the README follow the color scheme of the site.
 - Links to files outside docs/ (licenses, sources) point to GitHub.
 - A figure of tools/make_figures.py alone on its line (``![...](images/x.svg)``)
   is inlined, so that its colours follow the light/dark toggle of the site.
@@ -19,6 +20,11 @@ def on_page_markdown(markdown, page, config, **kwargs):
     if page.file.src_uri == "index.md":
         markdown = (Path(config.config_file_path).parent / "README.md").read_text()
         markdown = re.sub(r"\((?:\./)?docs/", "(", markdown).replace('src="docs/', 'src="')
+        # the logo follows the light or dark scheme of the site
+        markdown = re.sub(
+            r"<picture>.*?srcset=\"docs/([^\"]+)\".*?src=\"(?:docs/)?([^\"]+)\"([^>]*)>\s*</picture>",
+            lambda m: f'<img alt="remblais" src="{m.group(2)}#only-light"{m.group(3)}><img alt="remblais" src="{m.group(1)}#only-dark"{m.group(3)}>',
+            markdown, flags=re.S)
         for name in _ROOT_FILES:
             markdown = markdown.replace(f"({name})", f"({BLOB}{name})")
     # Links from docs/ to the sources: ../remblais/... -> GitHub
